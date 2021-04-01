@@ -1,0 +1,147 @@
+\documentclass{article}
+\usepackage{graphicx} 				%simple figure inclusion
+\usepackage{epstopdf, epsfig} 		%simple figure inclusion
+\usepackage{amsmath} 				%math
+\usepackage[utf8]{inputenc} 		%idk
+\usepackage[english]{babel} 		%idk
+\usepackage{microtype} 				%idk
+\usepackage[left=1.5in, right=1.5in]{geometry}
+\usepackage{fancyhdr} 				%header footer
+%\usepackage{mathptmx} 				%Times New Roman
+\usepackage{gensymb} 				%degree symbol
+%\usepackage[nottoc]{tocbibind} 		%place ToC and References
+\usepackage{float}					%place floats precisely
+\usepackage{tabulary}				%tables with good column size
+%\usepackage[numbers]{natbib}		%bibliography with numbers, alpha order with APA
+\usepackage[colorlinks]{hyperref}	%clickable references
+\usepackage{xfrac}   				%for \sfrac macro
+\usepackage[final]{pdfpages}		%add pdf pages
+\usepackage{soul}                   %properly wrap underlined texts
+\usepackage{bm}						%"more reliable" math boldface
+\usepackage{mathtools}
+\usepackage{listings}				%include code
+
+\usepackage[style=authoryear,sorting=none, maxcitenames=2]{biblatex}
+    \addbibresource{references.bib}
+
+\pagestyle{fancy}
+\cfoot{\thepage}
+
+\hypersetup{hidelinks}			%no box around links
+
+\linespread{1.3}
+
+%New colors defined below
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+%Code listing style named "mystyle"
+\lstdefinestyle{mystyle}{
+  backgroundcolor=\color{backcolour},   commentstyle=\color{codegreen},
+  keywordstyle=\color{magenta},
+  numberstyle=\tiny\color{codegray},
+  stringstyle=\color{codepurple},
+  basicstyle=\footnotesize,
+  breakatwhitespace=false,         
+  breaklines=true,                 
+  captionpos=b,                    
+  keepspaces=true,                 
+  numbers=left,                    
+  numbersep=5pt,                  
+  showspaces=false,                
+  showstringspaces=false,
+  showtabs=false,                  
+  tabsize=2
+}
+
+%"mystyle" code listing set
+\lstset{style=mystyle}
+\lstset{basicstyle=\footnotesize\ttfamily,breaklines=true}
+\lstset{framextopmargin=50pt,frame=bottomline}
+
+%========================================================================
+
+\begin{document}
+
+
+\begin{titlepage}
+	\begin{center}
+		\vspace*{\fill}
+
+		\LARGE 
+		\textbf{Linear Models: Project Proposal}\\
+		\vspace{0.5cm}
+		\large STAT 230A -- Linear Models\\
+		\vspace{0.5cm}
+		
+%		\vspace{1.5cm}
+%		
+%		
+%		\vfill
+%		\vspace{0.5cm}
+		
+		\Large Huy G. Pham \& John V. Manousakis
+		
+		\vspace{0.5cm}
+		\today
+		
+		\vspace*{\fill}
+	\end{center}
+\end{titlepage}
+
+\newpage
+
+%===============================================================================================================================================
+
+% \title{Linear Models: Project Proposal}
+% \author{Huy Pham \& John Manousakis}
+
+% \maketitle
+
+%Prompt: The goal of the final project is to analyze interesting real-world questions using the methods we learned in this course, so we highly recommend working on empirical projects. You can form groups of 1-2 students for the final project. Your proposal should consist of a clear answer to the following questions within 1 page (font size 11 and 1.5 spaced): 
+
+% What is the data you want to analyze. Please describe in detail the data you want to work with. You can use any dataset that is of interest, as long as it is publicly available. We provided some possible data sources below. 
+
+% What are your research questions and what methods you plan to use. You are required to use methods from this course. You can go beyond the methods covered in the lecture but the main empirical models of your final project should be highly related. We are going to cover more topics in the following lectures. You are also encouraged to use those methods.
+
+\section{Dataset selection}
+
+For this project, we propose looking at a dataset containing assessed values for residential properties sold in Ames, Iowa in the late 2000's. Although the Boston housing dataset is commonly used, it is outdated for today's housing market, and contains fewer covariates. By using the Ames data set, updated inference statements can be made about property values, and deeper analyses of variables can be performed. The data set was compiled by prof. Dean DeCock and contains general information about a home's construction and features, such as size, condition, and year built, as well as the target variable: its sale price \parencite{DDC}. In general, information such as square footage of the house and its features provide continuous variables to perform linear analysis with; however, the data also contains various categorical classifications, such as roofing material or the presence/absence of features like garages or pools. Non-continuous variables will be assessed to see if the data is usable as binary, or categories/factors that can be used to divide the set into subgroups, then analyzed via methods seen in the course.
+
+\section{Inquiries}
+
+% Topics to cover:
+%    \begin{itemize}
+%        \item OLS and inference in the parameters \& prediction
+%        \item EHW variance being significant (homoskedastic vs heteroskedastic)
+%        \item FWL theorem, hypothesis testing
+%        \item Leverage scores/leave-one-out/outliers
+%        \item Population OLS and stuff
+%        \item Overfitting - Ridge - Lasso
+%        \item Transformation of covariates / transformation of outcome
+%        \item Interaction
+%        \item Weighted OLS
+%    \end{itemize}
+
+% We 'll do OLS  
+Overall, we are interested in how each variable affects the final sale price of the homes, which can be seen with ordinary least squares.
+% and an EHW variance estimate
+We are also interested in any significant changes that arise if we assume homoskedasticity, and we propose comparing the EHW variance to identify any differences.
+    We are interested in challenging the assumptions of the EHW variance estimator by comparing its results with a bootstrap estimate for the variance.
+% Picking covariates
+Moreover, the size of the dataset allows for less significant covariates to be filtered out, and we propose using LASSO as a preliminary method of reducing covariates considered in the fit.
+    Hypothesis testing could also be utilized to infer whether certain covariates have an influence in the sale price or not.
+% Transformations -- feature engineering
+We plan to experiment in developing models using transformations of the covariates and the outcome to determine if such models could be more suitable for prediction.
+    Cross-validation can be used to rank the models in terms of accuracy.
+% Outlier detection
+The dataset is known to contain several outliers, where sale prices do not represent actual market values, and we propose to use leave-one-out methods in order to form an outlier-detecting mechanism and identify such points.
+% Analyze sub-groups
+Lastly, we propose to analyze the data with respect to sub-groups, say, locations of the neighborhoods, and investigate whether or not there are cases where Simpson's paradox arise using the concept of partial correlation.
+
+
+\printbibliography
+
+\end{document}
