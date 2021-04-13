@@ -37,3 +37,10 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# Custom
+main.tex
+main.synctex.gz
+main.log
+main-concordance.tex
+figure/

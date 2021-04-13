@@ -1,0 +1,72 @@
+\documentclass[english]{article}
+
+\usepackage{geometry,comment,fancyhdr,amsthm,amsmath,hyperref,comment,hyperref,enumerate}
+
+\geometry{verbose,tmargin=1.1in,bmargin=1.1in,lmargin=1.1in,rmargin=1.1in}
+\pagestyle{fancy}
+\setlength{\parskip}{\smallskipamount}
+\setlength{\parindent}{0pt}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=magenta,
+}
+\usepackage{float}
+
+\begin{document}
+
+\bibliographystyle{plain}
+
+\title{Title goes here}
+
+
+\author{Author}
+
+
+\maketitle
+
+<<echo = FALSE,message=FALSE>>=
+# Import Packages Here
+
+library(ggplot2)    # Elegant data vis
+                    # ...
+@
+
+
+\section{This is a section}
+
+\subsection{This is a subsection}
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+<<chunk_name, cache=TRUE>>=
+
+# R code goes here
+
+@
+
+\subsection{This is a subsection}
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
+<<chunk_name_2, eval=FALSE>>=
+
+# This chunk is displayed and not evaluated
+
+@
+
+\section{Another Section}
+
+<<generate_plot, cache=TRUE, fig=TRUE>>=
+
+# Write code that produces a figure here
+x = rnorm(20)
+y = rnorm(20)
+plot(x,y)
+
+@
+
+
+\end{document}
