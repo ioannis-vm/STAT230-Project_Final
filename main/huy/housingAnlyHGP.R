@@ -6,6 +6,7 @@
 library(tidyverse)
 library(dplyr)
 
+
 ## ----various settings---------------------------------------------------------
 rm(list=ls())
 
@@ -61,7 +62,7 @@ lasso.mod <- glmnet(x.train,
                    alpha = 1, 
                    lambda = lambdas) # Fit lasso model on training data
 
-plot(lasso_mod)    # Draw plot of coefficients
+plot(lasso.mod)    # Draw plot of coefficients
 
 cv.out <- cv.glmnet(x.train, y.train, alpha = 1) # Fit lasso model on training data
 plot(cv.out) # Draw plot of training MSE as a function of lambda
@@ -72,3 +73,24 @@ mean((lasso.pred - y.test)^2) # Calculate test MSE
 out <- glmnet(x, y, alpha = 1, lambda = lambdas) # Fit lasso model on full dataset
 lasso.coef <- predict(out, type = "coefficients", s = bestlam)[1:20,] # Display coefficients using lambda chosen by CV
 lasso.coef
+
+## ----Hyp Test-----------------------------------------------------------------
+housing.fit.full <- lm(SalePrice ~ ., data = ames.numeric)
+housing.fit.cond <- lm(SalePrice ~ Overall.Qual, data = ames.numeric)
+housing.fit.1 <- lm(SalePrice ~ 1, data = ames.numeric)
+
+anova(housing.fit.1, housing.fit.cond, housing.fit.full)
+anova(housing.fit.cond, housing.fit.full)
+
+library(MASS)
+library("Matching")
+library(car)
+
+
+##----EHW-----------------------------------------------------------------------
+housing.full.hc0 = sqrt(diag(hccm(housing.fit.full, type="hc0")))
+housing.full.hc1 = sqrt(diag(hccm(housing.fit.full, type="hc1")))
+housing.full.hc2 = sqrt(diag(hccm(housing.fit.full, type="hc2")))
+housing.full.hc3 = sqrt(diag(hccm(housing.fit.full, type="hc3")))
+housing.full.hc4 = sqrt(diag(hccm(housing.fit.full, type="hc4")))
+
