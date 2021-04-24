@@ -15,29 +15,30 @@
 - [X] Mo.Sold 	 	 0 	 integer
 - [X] Pool.Area 	 0 	 integer
 ***** the rest
-- [ ] Lot.Frontage 	 490 	 integer
 - [ ] Year.Remod.Add 	 0 	 integer
-- [ ] Mas.Vnr.Area 	 23 	 integer
-- [ ] BsmtFin.SF.1 	 1 	 integer
-- [ ] BsmtFin.SF.2 	 1 	 integer
-- [ ] Bsmt.Unf.SF 	 1 	 integer
 - [ ] X1st.Flr.SF 	 0 	 integer
 - [ ] X2nd.Flr.SF 	 0 	 integer
 - [ ] Low.Qual.Fin.SF  	 0 	 integer
-- [ ] Bsmt.Full.Bath 	 2 	 integer
-- [ ] Bsmt.Half.Bath 	 2 	 integer
 - [ ] Full.Bath 	 0 	 integer
 - [ ] Half.Bath 	 0 	 integer
 - [ ] Bedroom.AbvGr 	 0 	 integer
 - [ ] Kitchen.AbvGr 	 0 	 integer
 - [ ] Fireplaces 	 0 	 integer
-- [ ] Garage.Yr.Blt 	 159 	 integer
-- [ ] Garage.Cars 	 1 	 integer
 - [ ] Wood.Deck.SF 	 0 	 integer
 - [ ] Open.Porch.SF 	 0 	 integer
 - [ ] Enclosed.Porch 	 0 	 integer
 - [ ] X3Ssn.Porch 	 0 	 integer
 - [ ] Screen.Porch 	 0 	 integer
+- [ ] Lot.Frontage 	 490 	 integer
+- [ ] Garage.Yr.Blt 	 159 	 integer
+- [ ] Mas.Vnr.Area 	 23 	 integer
+- [ ] Bsmt.Full.Bath 	 2 	 integer
+- [ ] Bsmt.Half.Bath 	 2 	 integer
+- [ ] BsmtFin.SF.1 	 1 	 integer
+- [ ] BsmtFin.SF.2 	 1 	 integer
+- [ ] Bsmt.Unf.SF 	 1 	 integer
+- [ ] Garage.Cars 	 1 	 integer
+
 ***** not useful
 - [X] Order 	 	 0 	 integer
 - [X] PID 	 	 0 	 integer
@@ -46,7 +47,6 @@
 **** factors
 - [ ] MS.Zoning 	 0 	 factor
 - [ ] Street 	 	 0 	 factor
-- [ ] Alley 	 	 2732 	 factor
 - [ ] Lot.Shape 	 0 	 factor
 - [ ] Land.Contour 	 0 	 factor
 - [ ] Utilities 	 0 	 factor
@@ -65,28 +65,29 @@
 - [ ] Exter.Qual 	 0 	 factor
 - [ ] Exter.Cond 	 0 	 factor
 - [ ] Foundation 	 0 	 factor
-- [ ] Bsmt.Qual 	 79 	 factor
-- [ ] Bsmt.Cond 	 79 	 factor
-- [ ] Bsmt.Exposure 	 79 	 factor
-- [ ] BsmtFin.Type.1 	 79 	 factor
-- [ ] BsmtFin.Type.2 	 79 	 factor
 - [ ] Heating 	 	 0 	 factor
 - [ ] Heating.QC 	 0 	 factor
 - [ ] Central.Air 	 0 	 factor
 - [ ] Electrical 	 0 	 factor
 - [ ] Kitchen.Qual 	 0 	 factor
 - [ ] Functional 	 0 	 factor
-- [ ] Fireplace.Qu 	 1422 	 factor
-- [ ] Garage.Type 	 157 	 factor
-- [ ] Garage.Finish 	 157 	 factor
-- [ ] Garage.Qual 	 158 	 factor
-- [ ] Garage.Cond 	 158 	 factor
 - [ ] Paved.Drive 	 0 	 factor
-- [ ] Pool.QC 	 	 2917 	 factor
-- [ ] Fence 	 	 2358 	 factor
-- [ ] Misc.Feature 	 2824 	 factor
 - [ ] Misc.Val 	 	 0 	 integer
 - [ ] Sale.Type 	 0 	 factor
 - [ ] Sale.Condition 	 0 	 factor
+- [ ] Pool.QC 	 	 2917 	 factor
+- [ ] Misc.Feature 	 2824 	 factor
+- [ ] Alley 	 	 2732 	 factor
+- [ ] Fence 	 	 2358 	 factor
+- [ ] Fireplace.Qu 	 1422 	 factor
+- [ ] Garage.Qual 	 158 	 factor
+- [ ] Garage.Cond 	 158 	 factor
+- [ ] Garage.Finish 	 157 	 factor
+- [ ] Garage.Type 	 157 	 factor
+- [ ] Bsmt.Qual 	 79 	 factor
+- [ ] Bsmt.Cond 	 79 	 factor
+- [ ] Bsmt.Exposure 	 79 	 factor
+- [ ] BsmtFin.Type.1 	 79 	 factor
+- [ ] BsmtFin.Type.2 	 79 	 factor
 
 - [ ] SalePrice 	 0 	 integer

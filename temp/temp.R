@@ -1,17 +1,3 @@
-## ----various settings---------------------------------------------------------
-point.col = rgb(red=0.3, green=0.3, blue=0.3, alpha=0.4)
-
-## ----read in data-------------------------------------------------------------
-data.dir <- "~/Desktop/project/STAT230-Project_Final/data/"
-setwd(data.dir)
-ames.full <- read.csv(file = 'AmesHousing.txt', sep = "\t")
-dims <- dim(ames.full)
-
-## ----data preparation---------------------------------------------------------
-ames.full$MS.SubClass <- factor(ames.full$MS.SubClass)
-ames.Overall.Qual <- as.numeric(ames.Overall.Qual)
-ames.Overall.Cond <- as.numeric(ames.Overall.Cond)
-
 ## ----exploratory analysis-----------------------------------------------------
 summary(ames.full)
 
@@ -28,6 +14,9 @@ summary(ames.full)
 
 model1 <- lm(SalePrice ~ Gr.Liv.Area, data=ames.full)
 summary(model1)
+
+par(mfrow=c(2,2))
+plot(model1)
 
 plot(ames.full$Gr.Liv.Area, ames.full$SalePrice, col=point.col)
 abline(reg=model1)
@@ -46,6 +35,10 @@ model2 <- lm(
 model <- model2
 summary(model)
 
+par(mfrow=c(2,2))
+plot(model2)
+
+
 # Residual plots
 plot(residuals(model), fitted(model), xlab = "Residuals", ylab = "Fitted Values", col=point.col)
 
@@ -59,6 +52,9 @@ model3 <- lm(
 
 model <- model3
 summary(model)
+
+par(mfrow=c(2,2))
+plot(model3)
 
 # Residual plots
 plot(residuals(model), fitted(model), xlab = "Residuals", ylab = "Fitted Values", col=point.col)
@@ -76,8 +72,28 @@ model4 <- lm(
 model <- model4
 summary(model)
 
+par(mfrow=c(2,2))
+plot(model4)
+
 # Residual plots
 plot(residuals(model), fitted(model), xlab = "Residuals", ylab = "Fitted Values", col=point.col)
+
+## ----model 5------------------------------------------------------------------
+
+model5 <- lm(
+  SalePrice ~ .,
+  data=na.omit(ames.full)
+)
+
+model <- model4
+summary(model)
+
+par(mfrow=c(2,2))
+plot(model4)
+
+# Residual plots
+plot(residuals(model), fitted(model), xlab = "Residuals", ylab = "Fitted Values", col=point.col)
+
 
 
 ## ----pca----------------------------------------------------------------------
@@ -93,7 +109,7 @@ ames.pca <- prcomp(ames.numeric, center = TRUE, scale. = TRUE)
 
 library("rgl")
 plot3d(ames.pca$x[,1], ames.pca$x[,2], ames.pca$x[,3], type="s", size=1, lit=TRUE,)
-
+rglwidget()
 
 # compute the distance from the origin given the first three PCs
 r2 <- ames.pca$x[,1]^2 + ames.pca$x[,2]^2 + ames.pca$x[,3]^2
