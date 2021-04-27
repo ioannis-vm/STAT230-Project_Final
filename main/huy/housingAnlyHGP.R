@@ -94,3 +94,5 @@ housing.full.hc2 = sqrt(diag(hccm(housing.fit.full, type="hc2")))
 housing.full.hc3 = sqrt(diag(hccm(housing.fit.full, type="hc3")))
 housing.full.hc4 = sqrt(diag(hccm(housing.fit.full, type="hc4")))
 
+# check code11.3.2 second example
+

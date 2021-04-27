@@ -1,0 +1,277 @@
+---
+title: "temp"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+point.col = rgb(red=0.3, green=0.3, blue=0.3, alpha=0.4)  # point color for the plots
+```
+
+# Reading in data
+
+The following code reads the data and performs some basic necessary conversions.
+
+```{r read}
+# read in data
+data.dir <- "../data/"
+setwd(data.dir)
+ames.full <- read.csv(file = 'AmesHousing.txt', sep = "\t")
+
+# dimensions
+dims <- dim(ames.full)
+
+# conversions
+names(ames.full)
+for (name in names(ames.full)) {
+  if (typeof(ames.full[,name]) == "character"){
+    ames.full[,name] <- as.factor(ames.full[,name])
+  }
+}
+ames.full$Overall.Qual <- as.numeric(ames.full$Overall.Qual)
+ames.full$Overall.Cond <- as.numeric(ames.full$Overall.Cond)
+```
+
+# Data cleanup & preparation
+
+The following code displays the summary of the full data frame and removes some columns with a lot of Na values.
+
+```{r explore1}
+summary(ames.full)
+
+# count NA values and get column types
+nac <- sapply(ames.full, function(x) sum(is.na(x)))
+for (i in 1:length(nac)) {
+ cat(names(nac[i]), "\t", nac[[i]], "\t", class(ames.full[1,i]), "\n")
+}
+
+```
+
+We remove columns that contain NA values for more than 10% of the observations.
+
+```{r}
+n = 0
+for (i in 1:length(nac)) {
+  na.pct <- nac[[i]] / dims[1]
+  if (na.pct > 0.10) {
+    n <- n + 1
+    cat(na.pct, "\t", names(nac[i]), "\n")
+  }
+}
+
+# Construct a vector of columns to remove
+f <- function(col.name) {
+  na.pct = sum(is.na(ames.full[col.name])) / dims[1]
+  if (na.pct>0.10){
+    return(TRUE)
+  } else {
+    return(FALSE)
+  }
+}
+
+cols.to.remove <- names(ames.full)[sapply(names(ames.full), f)]
+```
+
+We will remove these columns, and also remove "order" and "pid" which have no predictive power.
+
+```{r}
+ames <- ames.full[, -which(names(ames.full) %in% cols.to.remove)]
+ames <- ames[, -which(names(ames) %in% c("Order", "PID"))]
+```
+
+
+```{r}
+names(ames)
+```
+
+We will drop the rest of the observations that contain Na's.
+
+```{r}
+ames <- ames[complete.cases(ames), ]
+```
+
+We have removed the following percentage of the observations:
+
+```{r}
+cat((1 - dim(ames)[1] / dim(ames.full)[1]) * 100, " %")
+```
+
+# Finiding the normal linear model that best explains the variability in SalePrice
+
+### Full model (unnecessarily complicated)
+
+```{r}
+fit <- lm(SalePrice ~ ., data=ames)
+summary(fit)
+```
+
+Note:
+Total.Bsmt.SF, Gr.Liv.Area produce NAs for the coeffs because they are precise linear combinations of other features.
+Remove them? Keep *them* and remove the other features? We can start by removing *them*.
+
+```{r}
+ames <- ames[, -which(names(ames) %in% c("Total.Bsmt.SF", "Gr.Liv.Area"))]
+```
+
+```{r}
+par(mfrow=c(2,2))
+plot(fit, col = point.col)
+```
+
+We will manually remove some outliers using this model, and repeat the model fitting.
+
+```{r}
+ids <- which(  (abs(residuals(fit))>1.5e5) | (hatvalues(fit)>0.99) )
+ids
+
+```
+
+```{r}
+ames <- ames[-ids, ]
+```
+
+Since we have removed data, we might have ended up with factors with unused levels. This, among other issues, can cause [problems](https://stackoverflow.com/questions/44200195/how-to-debug-contrasts-can-be-applied-only-to-factors-with-2-or-more-levels-er).
+We have to reformat the factor data, and [drop unused factor levels](https://stat.ethz.ch/R-manual/R-devel/library/base/html/droplevels.html).
+
+```{r}
+ames <- droplevels(ames)
+```
+
+Now we might have ended up with factors that contain a single level.
+
+```{r}
+for (name in names(ames)) {
+  if (!is.null(levels(ames[,name]))) {
+    if (length(levels(ames[,name])) == 1) {
+      cat('~~~\n')
+    }
+    cat(length(levels(ames[,name])), ' ', name, '\n')
+    if (length(levels(ames[,name])) == 1) {
+      cat('~~~\n')
+    }
+  }
+}
+```
+
+```{r}
+levels(ames[,"Utilities"])
+```
+```{r}
+ames <- ames[, -which(names(ames) %in% c("Utilities"))]
+```
+
+```{r}
+fit <- lm(SalePrice ~ ., data=ames)
+summary(fit)
+```
+
+```{r}
+par(mfrow=c(2,2))
+plot(fit, col = point.col)
+```
+```{r}
+hist(residuals(fit), breaks=50)
+```
+
+```{r}
+formula(fit)
+```
+Keep in mind:
+
+- I think this is the most complicated model we can have (as a linear unweighted least squares model, in terms of RSS), while doing the least data cleaning.
+- We will perform model selection starting from here and stepping backwards, and then go the other way around.
+
+- As it is apparent from the Q-Q plot and the histogram of the residuals, the residuals are not normally distributed. Will this also be the case for the simpler model?
+- It will also be interesting to investigate how inference results are affected (assuming normality), by comparing them to their bootstrap-obtained counterparts.
+
+# Variable selection - Bringing down the complexity of the model
+
+For each $n$ we constraint the number of covariates and obtain the "best" subset that achieves the lowest RSS value using $n$ covariates. Due to the large number of the initial covariates (213 including the factor-interaction coefficients), which result in practically infinite combinations ($2^{213} = 131,640,364,58,569,648,337,239,753,460,458,804,039,861,886,925,068,638,906,788,872,192$), it is computationally infeasible to use exhaustive search (which would be ideal),  so we use the forward selection method (starting from a model with just an intercept, each time we add the feature whose coefficient has the lowest p-value, until we reach the maximum number of covariates). Note that forward selection can lead to a model that is worse than what would be obtained with an exhaustive search, due to the step-wise nature of feature addition. (However it is all we can do with so many features).
+
+```{r, cache=TRUE}
+fit.sub <- step(fit, direction="both")
+```
+
+```{r}
+summary(fit.sub)
+```
+
+```{r, cache=TRUE}
+par(mfrow=c(2,2))
+plot(fit.sub, col = point.col)
+```
+
+## Forward search starting from a simple model
+
+```{r, cache=TRUE}
+fit2 <- lm('SalePrice ~ 1', ames)
+```
+
+```{r, cache=TRUE}
+fit2.sub <- step(fit2, direction="both", scope=formula(fit))
+```
+
+Even though the covariates are in different order, we have in fact converged to the same solution as with the backwards elimination.
+
+```{r}
+p1 <- sort(names(fit2.sub$coefficients))
+p2 <- sort(names(fit.sub$coefficients))
+for (i in 1:length(p1)) {
+  cat(p1[i] == p2[i], ' ')
+}
+```
+
+
+# LASSO
+
+
+```{r}
+library(glmnet)
+library(dplyr)
+
+set.seed(1)
+ames.train <- ames %>% sample_frac(0.5)
+ames.test <- ames %>% setdiff(ames.train)
+x.train <- select(ames.train, -SalePrice) %>% data.matrix()
+y.train <- ames.train$SalePrice
+x.test <- select(ames.test, -SalePrice) %>% data.matrix()
+y.test <- ames.test$SalePrice
+lambdas <- 10^seq(10, -2, length = 100)
+
+lasso.mod <- glmnet(x.train, 
+                   y.train, 
+                   alpha = 1, 
+                   lambda = lambdas) # Fit lasso model on training data
+
+plot(lasso.mod)    # Draw plot of coefficients
+
+cv.out <- cv.glmnet(x.train, y.train, alpha = 1) # Fit lasso model on training data
+plot(cv.out) # Draw plot of training MSE as a function of lambda
+bestlam <- cv.out$lambda.min # Select lambda that minimizes training MSE
+lasso.pred <- predict(lasso.mod, s = bestlam, newx = x.test) # Use best lambda to predict test data
+lasso.mse <- mean((lasso.pred - y.test)^2) # Calculate test MSE
+
+x <- select(ames, -SalePrice) %>% data.matrix()
+y <- ames$SalePrice
+
+out <- glmnet(x, y, alpha = 1, lambda = lambdas) # Fit lasso model on full dataset
+lasso.coef <- predict(out, type = "coefficients", s = bestlam) # Display coefficients using lambda chosen by CV
+lasso.coef
+```
+
+# Interaction?
+
+As a starter, try Overall Quality and Above Grade Living Area.
+
+```{r}
+separate.fit <- lm(SalePrice ~ Overall.Qual+Gr.Liv.Area, data=ames.full)
+summary(separate.fit)
+
+interaction.fit <- lm(SalePrice ~ Overall.Qual*Gr.Liv.Area, data=ames.full)
+summary(interaction.fit)
+```
+
+# Logistic
+
+Try half bath
