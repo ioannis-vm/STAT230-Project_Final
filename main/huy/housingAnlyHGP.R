@@ -75,9 +75,9 @@ lasso.coef <- predict(out, type = "coefficients", s = bestlam)[1:20,] # Display 
 lasso.coef
 
 ## ----Hyp Test-----------------------------------------------------------------
-housing.fit.full <- lm(SalePrice ~ ., data = ames.numeric)
-housing.fit.cond <- lm(SalePrice ~ Overall.Qual, data = ames.numeric)
-housing.fit.1 <- lm(SalePrice ~ 1, data = ames.numeric)
+housing.fit.full <- lm(SalePrice ~ ., data = ames)
+housing.fit.cond <- lm(SalePrice ~ Overall.Qual, data = ames)
+housing.fit.1 <- lm(SalePrice ~ 1, data = ames)
 
 anova(housing.fit.1, housing.fit.cond, housing.fit.full)
 anova(housing.fit.cond, housing.fit.full)
