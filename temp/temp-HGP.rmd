@@ -283,17 +283,44 @@ library(forcats)
 ames$Bldg.Type <- fct_collapse(ames$Bldg.Type, Twnhs = c("Twnhs","TwnhsE"))
 
 type.fit.area <- multinom(Bldg.Type ~  Lot.Area, data = ames)
-type.fit.all <- multinom(Bldg.Type ~  ., data = ames)
+
+# subclass defines the dwelling type, so let's leave it out
+type.fit.all <- multinom(Bldg.Type ~  . - MS.SubClass - House.Style, data = ames)
 type.fit.1 <- multinom(Bldg.Type ~  1, data = ames)
 
-anova(type.fit.area, type.fit.all)
-summary(type.fit.all)
+# oldAnoveMultinom <- anova(type.fit.area, type.fit.all)
+# summary(type.fit.all)
 
-# Z test for significance
-zTest <- summary(type.fit.all)$coefficients/summary(type.fit.all)$standard.errors
-pTest <- (1 - pnorm(abs(zTest), 0, 1)) * 2
+# # Z test for significance
+# zTest <- summary(type.fit.all)$coefficients/summary(type.fit.all)$standard.errors
+# pTest <- (1 - pnorm(abs(zTest), 0, 1)) * 2
 
-predict(type.fit.all, type = "probs")[1:200,]
-ames$Bldg.Type[1:200]
+predict.type <- predict(type.fit.all, newdata=ames, type = "class")
+type.accuracy <- sum((predict.type == ames$Bldg.Type))/dim(ames)[1]*100
+type.accuracy
+
+# check if it matches is true
+# take percentage of wrongs
+
 ```
 
+We can attempt to find more significant predictors of the multinomial regression by performing a likelihood ratio test on the model. 
+
+```{r}
+library(afex)
+library(AER)
+# Likelihood ratio test for significance
+LRTAnova <- Anova(type.fit.all)
+
+# predictors whose coefficients are tested against 0
+typeNonPredictors <- row.names(LRTAnova[LRTAnova$`Pr(>Chisq)`<=0.9,])
+typeNonPredictors <- c(typeNonPredictors, "MS.SubClass", "House.Style")
+
+# short regression
+ames.short <- ames[, !colnames(ames) %in% typeNonPredictors]
+type.fit.short <- multinom(Bldg.Type ~ ., data=ames.short)
+predict.short <- predict(type.fit.short, newdata=ames.short, type = "class")
+
+short.accuracy <- sum((predict.short == ames.short$Bldg.Type))/dim(ames.short)[1]*100
+short.accuracy
+```
