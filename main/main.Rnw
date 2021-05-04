@@ -1,72 +1,102 @@
-\documentclass[english]{article}
+\documentclass{article}
 
-\usepackage{geometry,comment,fancyhdr,amsthm,amsmath,hyperref,comment,hyperref,enumerate}
-
+\usepackage{geometry,comment,fancyhdr,amsthm,amsmath,hyperref,comment,hyperref,enumerate,float,datetime}
 \geometry{verbose,tmargin=1.1in,bmargin=1.1in,lmargin=1.1in,rmargin=1.1in}
+\newdateformat{monthyeardate}{\monthname[\THEMONTH], \THEYEAR}
 \pagestyle{fancy}
 \setlength{\parskip}{\smallskipamount}
 \setlength{\parindent}{0pt}
 
-\hypersetup{
-    colorlinks=true,
-    linkcolor=blue,
-    filecolor=magenta,      
-    urlcolor=magenta,
-}
-\usepackage{float}
+\usepackage[backend=biber,style=authoryear,sorting=none, maxcitenames=2]{biblatex}
+<<setup, eval= TRUE, include= FALSE, cache= FALSE, echo= FALSE>>=
+system (paste ("biber", sub ("\\.Rnw$", "", current_input())))
+@
+\addbibresource{references.bib}
+
+%========================================================================
 
 \begin{document}
 
-\bibliographystyle{plain}
+\begin{titlepage}
+	\begin{center}
+		\vspace*{\fill}
 
-\title{Title goes here}
+		\LARGE 
+		\textbf{Final Project Report}\\
+		\vspace{0.5cm}
+		\large STAT 230A -- Linear Models\\
+		\vspace{0.5cm}
 
+		\Large Huy G. Pham \& John V. Manousakis
+		
+		\vspace{0.5cm}
+		\monthyeardate\today
+		
+		\vspace*{\fill}
+	\end{center}
+\end{titlepage}
 
-\author{Author}
+\newpage
 
+%========================================================================
 
-\maketitle
+%%%%%%%%%%%%%%%
+% Conventions %
+%%%%%%%%%%%%%%%
+
+% Use one line per sentence %
+%  - great for git diff
+%  - can spot tedious long sentences
+%  - can add comments and just read those while skimming
+%    (this can also reveal inconsistencies in the logical flow of a paragraph)
+
+% Commit early and often %
+
+%%%%%%%%%%%%%%%%%
+% TEMPLATE AREA %
+%%%%%%%%%%%%%%%%%
+
+% things to copy-paste go here!
+
+% chunk that is evaluated but not shown (useful for package imports)
 
 <<echo = FALSE,message=FALSE>>=
-# Import Packages Here
 
-library(ggplot2)    # Elegant data vis
-                    # ...
+
 @
 
 
-\section{This is a section}
-
-\subsection{This is a subsection}
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+% chunk that is evaluated, shown and cached for faster compiling 
 
 <<chunk_name, cache=TRUE>>=
 
-# R code goes here
 
 @
 
-\subsection{This is a subsection}
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+% chunk tha tis displayed but not evaluated
 
 <<chunk_name_2, eval=FALSE>>=
 
-# This chunk is displayed and not evaluated
 
 @
 
-\section{Another Section}
+%========================================================================
 
-<<generate_plot, cache=TRUE, fig=TRUE>>=
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{The Ames Housing Dataset}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-# Write code that produces a figure here
-x = rnorm(20)
-y = rnorm(20)
-plot(x,y)
-
-@
+% introduce dataset
+We worked on a dataset containing assessed values for residential properties sold in Ames, Iowa, in the late 2000s.
+% why not use Boston Housing
+Although the Boston housing dataset is commonly used, it no longer realistically represents today's housing market and contains fewer covariates.
+Using the Ames dataset, inference on property values will better reflect today's reality, and there is more flexibility to demonstrate model selection techniques.
+% where does it come from
+The data set was compiled by prof. Dean DeCock and contains general information about a home's construction and features, such as size, condition, and year built, as well as the response variable: its sale price \parencite{DDC}.
+% description
+In general, information such as square footage of the house and its features provide continuous variables to perform linear analysis with;
+in addition, the dataset contains various categorical features, such as roofing material or the presence/absence of amenities like garages or pools.
 
 
 \end{document}
