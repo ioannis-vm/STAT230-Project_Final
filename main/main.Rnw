@@ -46,17 +46,25 @@ system (paste ("biber", sub ("\\.Rnw$", "", current_input())))
 % Conventions %
 %%%%%%%%%%%%%%%
 
+% These conventions can help us collectively develop a consistent report %
+
 % Tense %
 % - Let's stick to using a present tense instead of past
-%   (i.e. we perform univariate regression.. we demonstrate that blah, ...)
+%   (i.e. we perform *this analysis*.. we demonstrate *that phenomenon*, ...)
 
 % Use one line per sentence %
-%  - great for git diff
-%  - can spot tedious long sentences
-%  - can add comments and just read those while skimming (for long narrative parts)
+%  - works great with `$ git diff`
+%  - it can help spot tedious long sentences
+%  - we can add comments and just read those while skimming (for long narrative parts)
 %    (this can also reveal inconsistencies in the logical flow of a paragraph)
 
 % Commit early and often %
+
+% library() %
+% - load all libraries on the first chunk (to suppress output)
+% - but if the code of a chunk makes use of a library, 
+%   declare that in a comment. E.g.: # using library("car")
+%   (easier for the reader to reuse the code)
 
 %%%%%%%%%%%%%%%%%
 % TEMPLATE AREA %
@@ -89,8 +97,14 @@ system (paste ("biber", sub ("\\.Rnw$", "", current_input())))
 
 %========================================================================
 
+
+<<echo = FALSE,message=FALSE>>=
+library("car")
+
+@
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{The Ames Housing Dataset}
+\section{Introduction}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % introduce dataset
@@ -106,7 +120,8 @@ in addition, the dataset contains various categorical features, such as roofing 
 % the repository
 All files associated with this analysis are publicly available on GitHub in the following URL:
 \url{https://github.com/ioannis-vm/STAT230-Project\_Final}
-The repository contains the code that generates this report and the dataset accompanied with a text file that describes its fields.
+The repository contains the code that generates this report, auxiliary files we used to develop it, and the dataset accompanied with a text file that describes its fields.
+We heavily encourage a visit to our repository.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -116,7 +131,7 @@ The repository contains the code that generates this report and the dataset acco
 The following code imports the dataset and performs some cleanup operations.
 % explain cleanup operations
 Many variables had to be manually converted to factors.
-The variables \texttt{Overall.Qual} and \texttt{Overall.Cond} are a rating in the scale from 1 to 10 for the overall quality and condition of the considered house, respectively.
+The variables \texttt{Overall.Qual} and \texttt{Overall.Cond} are a rating in the scale from 1 to 10 of the overall quality and condition of the considered house, respectively.
 We treat those variables as continuous, since it is reasonable to assume that they are linearly related to the sale price.
 We remove columns that contain NA values for more than 10\% of the observations.
 We also remove the variables \texttt{Order} and \texttt{PID}, which are not predictor variables. 
@@ -169,7 +184,7 @@ cat((1 - dim(ames)[1] / dim(ames.full)[1]) * 100, " %")
 % intro
 In this section, we demonstrate the use of the normal linear model for making inference about the regression coefficients and the predicted values obtained using the model.
 
-\subsection{Univariate regression}
+\subsection{Univariate Regression}
 We examine the effect of \texttt{Gr.Liv.Area} (the total living area of the house) on \texttt{SalePrice}.
 
 <<univariate_fit, cache=TRUE>>=
@@ -211,10 +226,33 @@ Finally, we can identify heteroskedasticity.
 % conclusion
 These observations make it clear that even though we can get an idea for the mean estimate of the sale price given the total area of the house, it would not be wise to make inference about the distribution of sale price conditioned on the total area by simply using a Gauss-Markov model.
 
+\subsubsection{EHW Standard Error}
+
+Identification of heteroskedasticity motivates the need to calculate the Eicker–Huber–White standard errors for this model.
+The following code computes the t-statistic for the intercept and the coefficient using the five corrections covered in the course material.
+Lower t-statistic values correspond to higher standard errors.
+
+<<univariate_fit_ehq, cache=TRUE>>=
+
+# using library("car")
+fit.hc0 = sqrt(diag(hccm(fit, type="hc0")))
+fit.hc1 = sqrt(diag(hccm(fit, type="hc1")))
+fit.hc2 = sqrt(diag(hccm(fit, type="hc2")))
+fit.hc3 = sqrt(diag(hccm(fit, type="hc3")))
+fit.hc4 = sqrt(diag(hccm(fit, type="hc4")))
+fit.coef = summary(fit)$coef
+tvalues = fit.coef [ ,1] /
+cbind(fit.coef[ ,2] , fit.hc0 , fit.hc1 ,
+fit.hc2 , fit.hc3 , fit.hc4)
+colnames(tvalues) = c("ols",  "hc0", "hc1", "hc2", "hc3", "hc4")
+round(tvalues , 2)
+
+@
+
+We observe that all five EHW corrections result in increased standard errors for the regression coefficients, which is in line with our expectation.
 
 
-
-
+\subsection{Multivariate Regression}
 
 
 
