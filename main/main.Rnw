@@ -38,16 +38,22 @@ system (paste ("biber", sub ("\\.Rnw$", "", current_input())))
 
 \newpage
 
+\tableofcontents
+
 %========================================================================
 
 %%%%%%%%%%%%%%%
 % Conventions %
 %%%%%%%%%%%%%%%
 
+% Tense %
+% - Let's stick to using a present tense instead of past
+%   (i.e. we perform univariate regression.. we demonstrate that blah, ...)
+
 % Use one line per sentence %
 %  - great for git diff
 %  - can spot tedious long sentences
-%  - can add comments and just read those while skimming
+%  - can add comments and just read those while skimming (for long narrative parts)
 %    (this can also reveal inconsistencies in the logical flow of a paragraph)
 
 % Commit early and often %
@@ -88,7 +94,7 @@ system (paste ("biber", sub ("\\.Rnw$", "", current_input())))
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % introduce dataset
-We worked on a dataset containing assessed values for residential properties sold in Ames, Iowa, in the late 2000s.
+We work on a dataset containing assessed values for residential properties sold in Ames, Iowa, in the late 2000s.
 % why not use Boston Housing
 Although the Boston housing dataset is commonly used, it no longer realistically represents today's housing market and contains fewer covariates.
 Using the Ames dataset, inference on property values will better reflect today's reality, and there is more flexibility to demonstrate model selection techniques.
@@ -97,6 +103,128 @@ The data set was compiled by prof. Dean DeCock and contains general information 
 % description
 In general, information such as square footage of the house and its features provide continuous variables to perform linear analysis with;
 in addition, the dataset contains various categorical features, such as roofing material or the presence/absence of amenities like garages or pools.
+% the repository
+All files associated with this analysis are publicly available on GitHub in the following URL:
+\url{https://github.com/ioannis-vm/STAT230-Project\_Final}
+The repository contains the code that generates this report and the dataset accompanied with a text file that describes its fields.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Data Import and Cleanup}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+The following code imports the dataset and performs some cleanup operations.
+% explain cleanup operations
+Many variables had to be manually converted to factors.
+The variables \texttt{Overall.Qual} and \texttt{Overall.Cond} are a rating in the scale from 1 to 10 for the overall quality and condition of the considered house, respectively.
+We treat those variables as continuous, since it is reasonable to assume that they are linearly related to the sale price.
+We remove columns that contain NA values for more than 10\% of the observations.
+We also remove the variables \texttt{Order} and \texttt{PID}, which are not predictor variables. 
+
+<<import_cleanup, cache=TRUE>>=
+
+# read in data
+data.dir <- "../data/"
+setwd(data.dir)
+ames.full <- read.csv(file = 'AmesHousing.txt', sep = "\t")
+# get dimensions
+dims <- dim(ames.full)
+# perform conversions
+for (name in names(ames.full)) {
+  if (typeof(ames.full[,name]) == "character"){
+    ames.full[,name] <- as.factor(ames.full[,name])
+  }
+}
+ames.full$Overall.Qual <- as.numeric(ames.full$Overall.Qual)
+ames.full$Overall.Cond <- as.numeric(ames.full$Overall.Cond)
+f <- function(col.name) {
+  na.pct = sum(is.na(ames.full[col.name])) / dims[1]
+  if (na.pct>0.10){
+    return(TRUE)
+  } else {
+    return(FALSE)
+  }
+}
+cols.to.remove <- names(ames.full)[sapply(names(ames.full), f)]
+ames <- ames.full[, -which(names(ames.full) %in% cols.to.remove)]
+ames <- ames[, -which(names(ames) %in% c("Order", "PID"))]
+# drop the rest of the observations that contain Na's
+ames <- ames[complete.cases(ames), ]
+
+@
+
+The cleanup operations we perform remove 8.4\% of the observations.
+This is demonstrated with the following code.
+
+<<cleanup_percent, cache=TRUE>>=
+
+cat((1 - dim(ames)[1] / dim(ames.full)[1]) * 100, " %")
+
+@
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Normal Linear Model}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% intro
+In this section, we demonstrate the use of the normal linear model for making inference about the regression coefficients and the predicted values obtained using the model.
+
+\subsection{Univariate regression}
+We examine the effect of \texttt{Gr.Liv.Area} (the total living area of the house) on \texttt{SalePrice}.
+
+<<univariate_fit, cache=TRUE>>=
+fit <- lm(SalePrice ~ Gr.Liv.Area, data=ames)
+summary(fit)
+@
+
+We can see that the coefficient of \texttt{Gr.Liv.Area} and the intercept are non-zero with very high significance.
+
+% diagnostic plot introduction
+We generate four regression diagnostic plots.
+% residuals vs fitted
+The Residuals vs. Fitted plot is a scatter plot of the residuals versus the predicted values.
+It can be used to identify heteroskedasticity and assess the overal quality of the fit.
+% normal q-q
+The Normal Q-Q plot tests the normality assumption of the residuals by comparing the theoretical versus the observed quantile of each value.
+% scale-location
+The Scale-Location plot is another way to assess homoskedasticity.
+The red line indicates the average magnitude of the residuals as a function of the fitted values.
+A horizontal line implies homoskedasticity.
+% residuals vs leverage
+Finally, the Residuals vs. Leverage is useful to identify outlier points.
+Cook's distance can be used to classify points whose contribution in the coefficient estimates is very high.
+On the plot, such points lie outside the boundary defined by the dashed red line.
+
+<<univariate_fit_vis, cache=TRUE>>=
+point.col = rgb(red=0.3, green=0.3, blue=0.3, alpha=0.4)  # point color for the plots
+par(mfrow = c(2,2))
+plot(fit, col = point.col)
+@
+
+% outliers
+We note that observations 1499, 2181 and 2182 are outliers.
+Our model greatly over-predicts the sale price of those houses.
+% residuals: not normal dist
+The Normal Q-Q plot reveals that the residuals are not Normally distributed.
+% heteroskedasticity
+Finally, we can identify heteroskedasticity.
+% conclusion
+These observations make it clear that even though we can get an idea for the mean estimate of the sale price given the total area of the house, it would not be wise to make inference about the distribution of sale price conditioned on the total area by simply using a Gauss-Markov model.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 \end{document}

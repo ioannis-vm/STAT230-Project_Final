@@ -99,6 +99,24 @@ cat((1 - dim(ames)[1] / dim(ames.full)[1]) * 100, " %")
 
 # Finiding the normal linear model that best explains the variability in SalePrice
 
+### Univariate regression
+
+```{r}
+fit <- lm(SalePrice ~ Gr.Liv.Area, data=ames)
+```
+
+```{r}
+summary(fit)
+```
+
+```{r}
+par(mfrow = c(2,2))
+plot(fit, col = point.col)
+```
+
+
+
+
 ### Full model (unnecessarily complicated)
 
 ```{r}
