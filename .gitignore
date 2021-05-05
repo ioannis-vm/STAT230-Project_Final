@@ -51,3 +51,4 @@ cache/
 *.bcf
 *.run.xml
 *.bbl
+*.toc
