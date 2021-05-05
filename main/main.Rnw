@@ -1,7 +1,9 @@
-\documentclass{article}
+\documentclass[11pt]{article}
 
-\usepackage{geometry,comment,fancyhdr,amsthm,amsmath,hyperref,comment,hyperref,enumerate,float,datetime}
-\geometry{verbose,tmargin=1.1in,bmargin=1.1in,lmargin=1.1in,rmargin=1.1in}
+\usepackage{comment,fancyhdr,amsthm,amsmath,hyperref,comment,hyperref,enumerate,float,datetime, microtype}
+\usepackage[headheight=14.5pt, width=6.2in,top=1.1in,bottom=1.1in,bindingoffset=3mm]{geometry} % margins
+\usepackage{setspace}
+\renewcommand{\baselinestretch}{1.50}
 \newdateformat{monthyeardate}{\monthname[\THEMONTH], \THEYEAR}
 \pagestyle{fancy}
 \setlength{\parskip}{\smallskipamount}
@@ -100,7 +102,10 @@ system (paste ("biber", sub ("\\.Rnw$", "", current_input())))
 
 <<echo = FALSE,message=FALSE>>=
 library("car")
-
+library(nnet)
+library(forcats)
+library(afex)
+library(AER)
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -121,7 +126,6 @@ in addition, the dataset contains various categorical features, such as roofing 
 All files associated with this analysis are publicly available on GitHub in the following URL:
 \url{https://github.com/ioannis-vm/STAT230-Project\_Final}
 The repository contains the code that generates this report, auxiliary files we used to develop it, and the dataset accompanied with a text file that describes its fields.
-We heavily encourage a visit to our repository.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -131,11 +135,13 @@ We heavily encourage a visit to our repository.
 The following code imports the dataset and performs some cleanup operations.
 % explain cleanup operations
 Many variables had to be manually converted to factors.
-The variables \texttt{Overall.Qual} and \texttt{Overall.Cond} are a rating in the scale from 1 to 10 of the overall quality and condition of the considered house, respectively.
-We treat those variables as continuous, since it is reasonable to assume that they are linearly related to the sale price.
+The variables \texttt{Overall.Qual} and \texttt{Overall.Cond} are ratings on a scale from 1 to 10 of the overall quality and condition of the considered house, respectively.
+We treat those variables as continuous since it is reasonable to assume that they are linearly related to the sale price.
 We remove columns that contain NA values for more than 10\% of the observations.
 We also remove the variables \texttt{Order} and \texttt{PID}, which are not predictor variables. 
 
+\begin{minipage}{\linewidth}
+\singlespacing
 <<import_cleanup, cache=TRUE>>=
 
 # read in data
@@ -167,60 +173,69 @@ ames <- ames[, -which(names(ames) %in% c("Order", "PID"))]
 ames <- ames[complete.cases(ames), ]
 
 @
+\end{minipage}
 
-The cleanup operations we perform remove 8.4\% of the observations.
-This is demonstrated with the following code.
+The cleanup operations remove 8.4\% of the observations, as demonstrated with the following code.
 
+\begin{minipage}{\linewidth}
+\singlespacing
 <<cleanup_percent, cache=TRUE>>=
 
 cat((1 - dim(ames)[1] / dim(ames.full)[1]) * 100, " %")
 
 @
+\end{minipage}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Normal Linear Model}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % intro
-In this section, we demonstrate the use of the normal linear model for making inference about the regression coefficients and the predicted values obtained using the model.
+This section demonstrates the use of the normal linear model for making inference about the regression coefficients and the predicted values obtained using the model.
 
 \subsection{Univariate Regression}
 We examine the effect of \texttt{Gr.Liv.Area} (the total living area of the house) on \texttt{SalePrice}.
 
+\begin{minipage}{\linewidth}
+\singlespacing
 <<univariate_fit, cache=TRUE>>=
 fit <- lm(SalePrice ~ Gr.Liv.Area, data=ames)
 summary(fit)
 @
+\end{minipage}
 
 We can see that the coefficient of \texttt{Gr.Liv.Area} and the intercept are non-zero with very high significance.
 
 % diagnostic plot introduction
 We generate four regression diagnostic plots.
-% residuals vs fitted
+% residuals vs. fitted
 The Residuals vs. Fitted plot is a scatter plot of the residuals versus the predicted values.
-It can be used to identify heteroskedasticity and assess the overal quality of the fit.
+It can be used to identify heteroskedasticity and assess the overall quality of the fit.
 % normal q-q
 The Normal Q-Q plot tests the normality assumption of the residuals by comparing the theoretical versus the observed quantile of each value.
 % scale-location
 The Scale-Location plot is another way to assess homoskedasticity.
 The red line indicates the average magnitude of the residuals as a function of the fitted values.
 A horizontal line implies homoskedasticity.
-% residuals vs leverage
-Finally, the Residuals vs. Leverage is useful to identify outlier points.
-Cook's distance can be used to classify points whose contribution in the coefficient estimates is very high.
+% residuals vs. leverage
+Finally, the Residuals vs. Leverage helps identify outlier points.
+Cook's distance can be used to classify points whose contribution to the coefficient estimates is very high.
 On the plot, such points lie outside the boundary defined by the dashed red line.
 
+\begin{minipage}{\linewidth}
+\singlespacing
 <<univariate_fit_vis, cache=TRUE>>=
 point.col = rgb(red=0.3, green=0.3, blue=0.3, alpha=0.4)  # point color for the plots
 par(mfrow = c(2,2))
 plot(fit, col = point.col)
 @
+\end{minipage}
 
 % outliers
-We note that observations 1499, 2181 and 2182 are outliers.
-Our model greatly over-predicts the sale price of those houses.
+We note that observations 1499, 2181, and 2182 are outliers.
+Our model over-predicts the sale price of those houses.
 % residuals: not normal dist
-The Normal Q-Q plot reveals that the residuals are not Normally distributed.
+The Normal Q-Q plot reveals that the residuals are not normally distributed.
 % heteroskedasticity
 Finally, we can identify heteroskedasticity.
 % conclusion
@@ -232,6 +247,8 @@ Identification of heteroskedasticity motivates the need to calculate the Eickerâ
 The following code computes the t-statistic for the intercept and the coefficient using the five corrections covered in the course material.
 Lower t-statistic values correspond to higher standard errors.
 
+\begin{minipage}{\linewidth}
+\singlespacing
 <<univariate_fit_ehq, cache=TRUE>>=
 
 # using library("car")
@@ -248,12 +265,78 @@ colnames(tvalues) = c("ols",  "hc0", "hc1", "hc2", "hc3", "hc4")
 round(tvalues , 2)
 
 @
+\end{minipage}
 
-We observe that all five EHW corrections result in increased standard errors for the regression coefficients, which is in line with our expectation.
-
+We observe that all five EHW corrections result in increased standard errors for the regression coefficients, is aligning with our expectation.
 
 \subsection{Multivariate Regression}
 
+This section demonstrates multivariate regression of the sale price conditioned on all other available information, using a Normal Linear Model.
+% factors
+Factor variables are accounted for via interaction coefficients that modify the intercept according to the level of the factor.
+Due to the large number of factor variables, no other interaction coefficients associated with factor levels were included in the model (other than those for the intercept).
+Modifying only the intercept leads to a model that has the geometric interpretation of parallel hyperplanes.
+% outliers
+Before we perform the regression, we perform some further data processing that essentially eliminates outliers and post-processes the dataset after their elimination.
+\footnote{\texttt{Utilities} ended up containing a single level ("All public") and had to be removed.}
+
+
+\begin{minipage}{\linewidth}
+\singlespacing
+<<multivariate_regression_fit, cache=TRUE>>=
+# initial fit
+fit <- lm(SalePrice ~ ., data=ames)
+# eliminate redundant covariates (do not add to the rank of X)
+ames <- ames[, -which(names(ames) %in% c("Total.Bsmt.SF", "Gr.Liv.Area"))]
+# eliminate outliers
+ids <- which(  (abs(residuals(fit))>1.5e5) | (hatvalues(fit)>0.99) )
+ames <- ames[-ids, ]
+# remove single-level factor variables
+ames <- droplevels(ames)
+ames <- ames[, -which(names(ames) %in% c("Utilities"))]
+
+# final fit
+fit <- lm(SalePrice ~ ., data=ames)
+@
+\end{minipage}
+
+The summary of this model is very long, as it contains 213 coefficients (plus the intercept), for most of which we cannot reject the null hypothesis that their actual value is zero.
+As with the univariate case, we make regression diagnostic plots.
+
+<<multivariate_regression_summary, cache=TRUE>>=
+point.col = rgb(red=0.3, green=0.3, blue=0.3, alpha=0.4)  # point color for the plots
+par(mfrow = c(2,2))
+plot(fit, col = point.col)
+@
+
+% diagnostic interpretation
+The diagnostic plots show that this time homoskedasticity is reduced.
+Non-Normality of the residuals is more pronounced (in particular, their distribution has a much thinner tail on both sides).
+Finally, we no longer see outlier points with Cook's distance higher than 0.5.
+
+% comments on that model
+% we are overfitting! simplify the model
+Even though this model better fits the data, it might not be the most suitable to use.
+With 223 coefficients, this model has much flexibility to adapt to the observations, resulting in a lower mean squared error value than what could be obtained with simpler models.
+However, this in no way guarantees that it better explains reality.
+% example
+For instance, it might be the case that some of the variability in the data is caused by external factors, for which we do not have any information in the dataset (which is not unreasonable to assume).
+If that is the case, the augmented flexibility of our model will allow for the influence of those external factors to manifest itself as aliasing on the coefficients we are trying to predict.
+This can make features appear significantly relevant when in reality, they are not.
+% second example
+In addition, depending on our use case, we might need a model that is easier to interpret.
+% conclude & bridge: model selection
+For all these reasons, we often need to simplify our models.
+However, the simplifying process needs to be conducted using a consistent method and quantifiable metrics.
+Cross-validation is computationally intensive, and the number of available features makes it infeasible to implement the method naively (we could, of course, hand-pick features and limit the options).
+In the following section, we perform model selection with R's \texttt{step} function, which uses AIC to reveal the optimal number of features.
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Model Selection}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 

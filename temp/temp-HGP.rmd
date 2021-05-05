@@ -113,6 +113,24 @@ summary(fit)
 par(mfrow = c(2,2))
 plot(fit, col = point.col)
 ```
+```{r}
+summary(fit)
+```
+
+```{r}
+library ("car")
+fit.hc0 = sqrt(diag(hccm(fit, type="hc0")))
+fit.hc1 = sqrt(diag(hccm(fit, type="hc1")))
+fit.hc2 = sqrt(diag(hccm(fit, type="hc2")))
+fit.hc3 = sqrt(diag(hccm(fit, type="hc3")))
+fit.hc4 = sqrt(diag(hccm(fit, type="hc4")))
+fit.coef = summary(fit)$coef
+tvalues = fit.coef [ ,1] /
+cbind(fit.coef[ ,2] , fit.hc0 , fit.hc1 ,
+fit.hc2 , fit.hc3 , fit.hc4)
+colnames(tvalues) = c("ols",  "hc0", "hc1", "hc2", "hc3", "hc4")
+round(tvalues , 2)
+```
 
 
 
