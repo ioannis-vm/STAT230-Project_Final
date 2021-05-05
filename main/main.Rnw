@@ -244,7 +244,7 @@ These observations make it clear that even though we can get an idea for the mea
 \subsubsection{EHW Standard Error}
 
 Identification of heteroskedasticity motivates the need to calculate the Eicker–Huber–White standard errors for this model.
-The following code computes the t-statistic for the intercept and the coefficient using the five corrections covered in the course material.
+The following code\footnote{Adapted from the course material.} computes the t-statistic for the intercept and the coefficient using the five corrections covered in the course material.
 Lower t-statistic values correspond to higher standard errors.
 
 \begin{minipage}{\linewidth}
@@ -267,7 +267,7 @@ round(tvalues , 2)
 @
 \end{minipage}
 
-We observe that all five EHW corrections result in increased standard errors for the regression coefficients, is aligning with our expectation.
+We observe that all five EHW corrections result in increased standard errors for the regression coefficients, which is aligning with our expectation.
 
 \subsection{Multivariate Regression}
 
