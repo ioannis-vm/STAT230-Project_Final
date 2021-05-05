@@ -1,15 +1,15 @@
 \documentclass[11pt]{article}
 
-\usepackage{comment,fancyhdr,amsthm,amsmath,hyperref,comment,hyperref,enumerate,float,datetime, microtype}
+\usepackage{comment,fancyhdr,amsthm,amsmath,hyperref,comment,hyperref,enumerate,float,datetime, microtype, setspace}
 \usepackage[headheight=14.5pt, width=6.2in,top=1.1in,bottom=1.1in,bindingoffset=3mm]{geometry} % margins
-\usepackage{setspace}
-\renewcommand{\baselinestretch}{1.50}
-\newdateformat{monthyeardate}{\monthname[\THEMONTH], \THEYEAR}
-\pagestyle{fancy}
-\setlength{\parskip}{\smallskipamount}
-\setlength{\parindent}{0pt}
-
 \usepackage[backend=biber,style=authoryear,sorting=none, maxcitenames=2]{biblatex}
+
+\pagestyle{fancy}  % add headers and footers
+
+\renewcommand{\baselinestretch}{1.50}  %  set default line spacing
+\newdateformat{monthyeardate}{\monthname[\THEMONTH], \THEYEAR}  % change date formatting
+
+
 <<setup, eval= TRUE, include= FALSE, cache= FALSE, echo= FALSE>>=
 system (paste ("biber", sub ("\\.Rnw$", "", current_input())))
 @
@@ -74,13 +74,6 @@ system (paste ("biber", sub ("\\.Rnw$", "", current_input())))
 
 % things to copy-paste go here!
 
-% chunk that is evaluated but not shown (useful for package imports)
-
-<<echo = FALSE,message=FALSE>>=
-
-
-@
-
 
 % chunk that is evaluated, shown and cached for faster compiling 
 
@@ -90,9 +83,17 @@ system (paste ("biber", sub ("\\.Rnw$", "", current_input())))
 @
 
 
-% chunk tha tis displayed but not evaluated
+% chunk that is evaluated but not shown (useful for package imports)
 
-<<chunk_name_2, eval=FALSE>>=
+<<chunk_name2, echo = FALSE,message=FALSE, results='hide'>>=
+
+
+@
+
+
+% chunk that is displayed but not evaluated
+
+<<chunk_name_3, eval=FALSE>>=
 
 
 @
@@ -102,10 +103,11 @@ system (paste ("biber", sub ("\\.Rnw$", "", current_input())))
 
 <<echo = FALSE,message=FALSE>>=
 library("car")
-library(nnet)
-library(forcats)
-library(afex)
-library(AER)
+library("kableExtra")
+library("nnet")
+library("forcats")
+library("afex")
+library("AER")
 @
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -140,8 +142,7 @@ We treat those variables as continuous since it is reasonable to assume that the
 We remove columns that contain NA values for more than 10\% of the observations.
 We also remove the variables \texttt{Order} and \texttt{PID}, which are not predictor variables. 
 
-\begin{minipage}{\linewidth}
-\singlespacing
+\begin{singlespace}
 <<import_cleanup, cache=TRUE>>=
 
 # read in data
@@ -173,18 +174,17 @@ ames <- ames[, -which(names(ames) %in% c("Order", "PID"))]
 ames <- ames[complete.cases(ames), ]
 
 @
-\end{minipage}
+\end{singlespace}
 
 The cleanup operations remove 8.4\% of the observations, as demonstrated with the following code.
 
-\begin{minipage}{\linewidth}
-\singlespacing
+\begin{singlespace}
 <<cleanup_percent, cache=TRUE>>=
 
 cat((1 - dim(ames)[1] / dim(ames.full)[1]) * 100, " %")
 
 @
-\end{minipage}
+\end{singlespace}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Normal Linear Model}
@@ -196,13 +196,12 @@ This section demonstrates the use of the normal linear model for making inferenc
 \subsection{Univariate Regression}
 We examine the effect of \texttt{Gr.Liv.Area} (the total living area of the house) on \texttt{SalePrice}.
 
-\begin{minipage}{\linewidth}
-\singlespacing
+\begin{singlespace}
 <<univariate_fit, cache=TRUE>>=
 fit <- lm(SalePrice ~ Gr.Liv.Area, data=ames)
 summary(fit)
 @
-\end{minipage}
+\end{singlespace}
 
 We can see that the coefficient of \texttt{Gr.Liv.Area} and the intercept are non-zero with very high significance.
 
@@ -222,14 +221,13 @@ Finally, the Residuals vs. Leverage helps identify outlier points.
 Cook's distance can be used to classify points whose contribution to the coefficient estimates is very high.
 On the plot, such points lie outside the boundary defined by the dashed red line.
 
-\begin{minipage}{\linewidth}
-\singlespacing
+\begin{singlespace}
 <<univariate_fit_vis, cache=TRUE>>=
 point.col = rgb(red=0.3, green=0.3, blue=0.3, alpha=0.4)  # point color for the plots
 par(mfrow = c(2,2))
 plot(fit, col = point.col)
 @
-\end{minipage}
+\end{singlespace}
 
 % outliers
 We note that observations 1499, 2181, and 2182 are outliers.
@@ -247,8 +245,7 @@ Identification of heteroskedasticity motivates the need to calculate the Eickerâ
 The following code\footnote{Adapted from the course material.} computes the t-statistic for the intercept and the coefficient using the five corrections covered in the course material.
 Lower t-statistic values correspond to higher standard errors.
 
-\begin{minipage}{\linewidth}
-\singlespacing
+\begin{singlespace}
 <<univariate_fit_ehq, cache=TRUE>>=
 
 # using library("car")
@@ -265,7 +262,7 @@ colnames(tvalues) = c("ols",  "hc0", "hc1", "hc2", "hc3", "hc4")
 round(tvalues , 2)
 
 @
-\end{minipage}
+\end{singlespace}
 
 We observe that all five EHW corrections result in increased standard errors for the regression coefficients, which is aligning with our expectation.
 
@@ -281,8 +278,7 @@ Before we perform the regression, we perform some further data processing that e
 \footnote{\texttt{Utilities} ended up containing a single level ("All public") and had to be removed.}
 
 
-\begin{minipage}{\linewidth}
-\singlespacing
+\begin{singlespace}
 <<multivariate_regression_fit, cache=TRUE>>=
 # initial fit
 fit <- lm(SalePrice ~ ., data=ames)
@@ -298,7 +294,7 @@ ames <- ames[, -which(names(ames) %in% c("Utilities"))]
 # final fit
 fit <- lm(SalePrice ~ ., data=ames)
 @
-\end{minipage}
+\end{singlespace}
 
 The summary of this model is very long, as it contains 213 coefficients (plus the intercept), for most of which we cannot reject the null hypothesis that their actual value is zero.
 As with the univariate case, we make regression diagnostic plots.
@@ -317,7 +313,7 @@ Finally, we no longer see outlier points with Cook's distance higher than 0.5.
 % comments on that model
 % we are overfitting! simplify the model
 Even though this model better fits the data, it might not be the most suitable to use.
-With 223 coefficients, this model has much flexibility to adapt to the observations, resulting in a lower mean squared error value than what could be obtained with simpler models.
+With 223 coefficients (70 variables, some of which are factors), this model has much flexibility to adapt to the observations, resulting in a lower mean squared error value than what could be obtained with simpler models.
 However, this in no way guarantees that it better explains reality.
 % example
 For instance, it might be the case that some of the variability in the data is caused by external factors, for which we do not have any information in the dataset (which is not unreasonable to assume).
@@ -338,7 +334,168 @@ In the following section, we perform model selection with R's \texttt{step} func
 \section{Model Selection}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% intro
+In this section, we use stepwise regression to determine the features that result in the model that has the lowest AIC.
+% what is AIC
+The Akaike Information Criterion (AIC) is a parametric quantity that can characterize models based on how well they fit the data while favoring models that involve fewer features.
+$$
+AIC = n \log \left( \frac{RSS}{n} \right)  + 2 p
+$$
+$n$ is the number of observations, $p$ is the number of features, and $RSS$ is the residual sum of squares.
+Aiming to minimize RSS while maintaining a low $p$, we look for the combination of features that results in the lowest AIC.
+% what stepwise does
+Stepwise regression adds or removes one feature at a time (trying out all possible options) and commits to the change that causes the AIC score to drop the most.
+% why not do an exhaustive search
+With 70 possible covariates (not including the factor-level intercept interaction coefficients), we have practically infinite combinations of models.
+$$2^{70} = 1,180,591,620,717,411,303,424$$
+It is therefore infeasible to perform an exhaustive search, which motivates the use of stepwise regression.
+However, stepwise regression can lead to a worse model than what we would have obtained from an exhaustive search due to the stepwise nature of feature addition or removal.
 
+% huge output
+The following code performs the analysis.\footnote{Due to the very long output produced by the \texttt{step} function, we suppress the output here and manually insert the results in the report.}
+
+% chunk that is displayed but not evaluated
+\begin{singlespace}
+<<eval=FALSE>>=
+# stepwise regression starting from the complete model
+fit.sub <- step(fit, direction="both")
+# stepwise regression starting from the 'mean' model
+fit2 <- lm('SalePrice ~ 1', ames)
+fit2.sub <- step(fit, direction="both")
+@
+\end{singlespace}
+
+% chunk that is evaluated but not shown
+
+<<stepwise, echo=FALSE, results='hide', cache=TRUE>>=
+fit.sub <- step(fit, direction="both")
+fit2 <- lm('SalePrice ~ 1', ames)
+fit2.sub <- step(fit, direction="both")
+@
+
+While this is not always the case, here both directions result in the same model.
+The following figure shows the AIC obtained in each step starting from the full regression, as well as starting from the mean model.
+
+% chunk that is evaluated but not shown
+<<stepwise_plot, echo=FALSE, cache=TRUE, fig.width=6, fig.height=5>>=
+aics1 <- c(
+  52849.04,
+  52838.28,
+  52833.20,
+  52828.37,
+  52823.55,
+  52818.69,
+  52815.19,
+  52812.08,
+  52810.09,
+  52808.31,
+  52806.57,
+  52804.81,
+  52803.39,
+  52802.19,
+  52800.85,
+  52799.57,
+  52798.40,
+  52797.62,
+  52797.19
+)
+aics2 <- c(
+  57186.83,
+  56389.64,
+  55652.23,
+  55094.59,
+  54770.15,
+  54431.61,
+  54215.40,
+  53987.55,
+  53852.11,
+  53755.49,
+  53643.97,
+  53551.99,
+  53473.09,
+  53407.27,
+  53348.52,
+  53298.78,
+  53258.22,
+  53219.79,
+  53182.73,
+  53148.41,
+  53118.05,
+  53088.61,
+  53059.70,
+  53035.32,
+  53009.37,
+  52961.77,
+  52937.91,
+  52922.43,
+  52910.93,
+  52900.50,
+  52891.29,
+  52881.63,
+  52872.36,
+  52863.86,
+  52855.11,
+  52848.39,
+  52839.48,
+  52833.62,
+  52828.62,
+  52824.22,
+  52819.76,
+  52815.59,
+  52811.57,
+  52807.44,
+  52803.82,
+  52801.54,
+  52800.02,
+  52799.01,
+  52798.12,
+  52797.60,
+  52797.24,
+  52797.19
+)
+
+
+
+x1 <- c(70, 69, 68, 67, 66, 65, 64, 63, 62, 61, 60, 59, 58, 57, 56, 55, 54, 53, 52)
+x2 <- c(1:52)
+plot( x2, aics2, type = "b", col='#00008b',
+      ylab="AIC", xlab="Step", main="AIC at each step", ylim=c(52000,58000), log = "y", xlim=c(0,70))
+lines(x1, aics1, type = "b", col='#bd5d04')
+abline(h = 52797.19, lty=2)
+abline(v=52, lty=3)
+legend("right", legend=c("Forward", "Backward"),
+       col=c("#00008b", "#bd5d04"), lty=1, cex=0.8)
+
+@
+
+The plot reveals that starting from the complete model converges faster to the optimum since its AIC is already closer to that of the optimum model.
+We also note that even though the optimum model in terms of AIC has 52 explanatory variables, an extensive range of simpler models has a similar AIC.
+
+We can verify that the optimum models obtained from both directions are the same.
+
+\begin{singlespace}
+<<stepwise_final_compare, cache=TRUE>>=
+p1 <- sort(names(fit2.sub$coefficients)) # get names from one direction
+p2 <- sort(names(fit.sub$coefficients))  # get names from the other dir
+bool <- c() # instantiate a container for the results
+for (i in 1:length(p1)) {
+  bool <- append(bool, p1[i] == p2[i]) # check
+}
+prod(bool) == 1 # assert all components are TRUE
+@
+\end{singlespace}
+
+Finally, we present the summary of the optimum model.
+
+\small
+\begin{singlespace}
+<<stepwise_final_summary, cache=TRUE>>=
+summary(fit.sub)
+@
+\end{singlespace}
+
+
+% TODO Perhaps the summary should be placed in an appendix.
 
 
 
