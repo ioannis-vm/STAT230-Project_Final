@@ -373,8 +373,8 @@ fit2 <- lm('SalePrice ~ 1', ames)
 fit2.sub <- step(fit, direction="both")
 @
 
-While this is not always the case, here both directions result in the same model.
-The following figure shows the AIC obtained in each step starting from the full regression, as well as starting from the mean model.
+The following figure shows the AIC obtained in each step starting from the full regression (and going backwards), as well as starting from the mean model (and going forwards).
+While this is not always the case, here both directions result in the same model, with an AIC value of 52797.19 and 52 covariates.
 
 % chunk that is evaluated but not shown
 <<stepwise_plot, echo=FALSE, cache=TRUE, fig.width=6, fig.height=5>>=
