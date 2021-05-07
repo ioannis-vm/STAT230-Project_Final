@@ -9,6 +9,9 @@
 \renewcommand{\baselinestretch}{1.50}  %  set default line spacing
 \newdateformat{monthyeardate}{\monthname[\THEMONTH], \THEYEAR}  % change date formatting
 
+% commands for math
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
 
 <<setup, eval= TRUE, include= FALSE, cache= FALSE, echo= FALSE>>=
 system (paste ("biber", sub ("\\.Rnw$", "", current_input())))
@@ -18,6 +21,7 @@ system (paste ("biber", sub ("\\.Rnw$", "", current_input())))
 %========================================================================
 
 \begin{document}
+\SweaveOpts{concordance=TRUE}
 
 \begin{titlepage}
 	\begin{center}
@@ -493,6 +497,22 @@ Finally, we present the summary of the optimum model.
 summary(fit.sub)
 @
 \end{singlespace}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{LASSO Regression}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% intro
+We now seek to refine the covariates chosen in the model using a regularized regression.
+% motivation
+In general, it is prudent to selectively reduce the number of covariates used in order to safeguard against overfitting.
+This is typically done through a form of regularized regression, which penalizes the presence of large numbers of coefficients.
+Although the choice of ridge regression is also available, we choose LASSO since it allows for weaker covariates to be dropped out.
+% overview
+LASSO regression is equivalent to solving the regularized regression problem
+$$
+\hat{\beta} (t) = \argmin_{b_j} RSS(b_j) + \lambda \sum_{j=1}^p | b_j |
+$$
 
 
 % TODO Perhaps the summary should be placed in an appendix.
