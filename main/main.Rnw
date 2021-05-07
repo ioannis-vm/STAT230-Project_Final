@@ -513,7 +513,61 @@ LASSO regression is equivalent to solving the regularized regression problem
 $$
 \hat{\beta} (t) = \argmin_{b_j} RSS(b_j) + \lambda \sum_{j=1}^p | b_j |
 $$
+where $\lambda$ is a tuning parameter.
+% crossvalidation
+In order to find the best tuning parameter to use, we will split our data into two halves, used for testing and training.
+Below, we use the package \texttt{glmnet} to perform cross validation.
+A 10-fold cross validation is performed by default for a range of $\lambda$ values.
+From there, we choose the $\lambda$ value that results in the smallest cross validation mean squared error.
+% plots
+Below, we plot the coefficients still remaining as the L1-norm threshold for the coefficients become more restrictive. 
+We can see that as variables enter if we relax the $\lambda$ threshold, the most important ones enter first: \texttt{Street} (type of access), \texttt{Condtn.2} (proximity to certain road features), \texttt{Overall.Qual}, \texttt{Exterior.Cond}, and \texttt{Kitchen.Abvgr} (number of kitchens above grade.)
+We also plot the progression of the mean squared error as the $\lambda$ value changes.
+\begin{singlespace}
+<<LASSO_cv, cache=TRUE>>=
+library(glmnet)
+library(dplyr)
+library(plotmo)
 
+set.seed(1)
+ames.train <- ames %>% sample_frac(0.5)
+ames.test <- ames %>% setdiff(ames.train)
+x.train <- select(ames.train, -SalePrice) %>% data.matrix()
+y.train <- ames.train$SalePrice
+x.test <- select(ames.test, -SalePrice) %>% data.matrix()
+y.test <- ames.test$SalePrice
+lambdas <- 10^seq(10, -2, length = 100)
+
+lasso.mod <- glmnet(x.train, 
+                   y.train, 
+                   alpha = 1, 
+                   lambda = lambdas) # Fit lasso model on training data
+
+plot_glmnet(lasso.mod, label=5)    # Draw plot of coefficients
+plot(lasso.mod, label=5)    # Draw plot of coefficients
+
+cv.out <- cv.glmnet(x.train, y.train, alpha = 1) # Fit lasso model on training data
+plot(cv.out) # Draw plot of training MSE as a function of lambda
+bestlam <- cv.out$lambda.min # Select lambda that minimizes training MSE
+@
+
+We can now use the optimal $\lambda$ value in the LASSO prediction and output the mean-squared error from prediction.
+Note that several coefficients are filtered out to be zero: \texttt{House.Style}, \texttt{Condtn.1} (redundant), \texttt{BsmtFin.Type.2} (Rating of basement finished area), \texttt{Half.Bath}, \texttt{Garage.Yr.Blt}, \texttt{Pool.Area}, and \texttt{Misc.Val} (value of miscellaneous features).
+
+<<LASSO_regr, cache=TRUE>>=
+
+lasso.pred <- predict(lasso.mod, s = bestlam, newx = x.test) # Use best lambda to predict test data
+lasso.mse <- mean((lasso.pred - y.test)^2) # Calculate test MSE
+lasso.mse
+
+x <- select(ames, -SalePrice) %>% data.matrix()
+y <- ames$SalePrice
+
+out <- glmnet(x, y, alpha = 1, lambda = lambdas) # Fit lasso model on full dataset
+lasso.coef <- predict(out, type = "coefficients", s = bestlam) # Display coefficients using lambda chosen by CV
+lasso.coef
+@
+\end{singlespace}
 
 % TODO Perhaps the summary should be placed in an appendix.
 
