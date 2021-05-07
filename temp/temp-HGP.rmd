@@ -364,6 +364,7 @@ legend("right", legend=c("Forward", "Backward"),
 ```{r}
 library(glmnet)
 library(dplyr)
+library(plotmo)
 
 set.seed(1)
 ames.train <- ames %>% sample_frac(0.5)
@@ -379,7 +380,7 @@ lasso.mod <- glmnet(x.train,
                    alpha = 1, 
                    lambda = lambdas) # Fit lasso model on training data
 
-plot(lasso.mod)    # Draw plot of coefficients
+plot_glmnet(lasso.mod, label=5)    # Draw plot of coefficients
 
 cv.out <- cv.glmnet(x.train, y.train, alpha = 1) # Fit lasso model on training data
 plot(cv.out) # Draw plot of training MSE as a function of lambda

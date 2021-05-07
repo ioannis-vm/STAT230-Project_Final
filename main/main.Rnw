@@ -124,7 +124,7 @@ We work on a dataset containing assessed values for residential properties sold 
 Although the Boston housing dataset is commonly used, it no longer realistically represents today's housing market and contains fewer covariates.
 Using the Ames dataset, inference on property values will better reflect today's reality, and there is more flexibility to demonstrate model selection techniques.
 % where does it come from
-The data set was compiled by prof. Dean DeCock and contains general information about a home's construction and features, such as size, condition, and year built, as well as the response variable: its sale price \parencite{DDC}.
+The data set was compiled by Prof. Dean DeCock and contains general information about a home's construction and features, such as size, condition, and year built, as well as the response variable: its sale price \parencite{DDC}.
 % description
 In general, information such as square footage of the house and its features provide continuous variables to perform linear analysis with;
 in addition, the dataset contains various categorical features, such as roofing material or the presence/absence of amenities like garages or pools.
@@ -519,6 +519,7 @@ In order to find the best tuning parameter to use, we will split our data into t
 Below, we use the package \texttt{glmnet} to perform cross validation.
 A 10-fold cross validation is performed by default for a range of $\lambda$ values.
 From there, we choose the $\lambda$ value that results in the smallest cross validation mean squared error.
+
 % plots
 Below, we plot the coefficients still remaining as the L1-norm threshold for the coefficients become more restrictive. 
 We can see that as variables enter if we relax the $\lambda$ threshold, the most important ones enter first: \texttt{Street} (type of access), \texttt{Condtn.2} (proximity to certain road features), \texttt{Overall.Qual}, \texttt{Exterior.Cond}, and \texttt{Kitchen.Abvgr} (number of kitchens above grade.)
@@ -569,7 +570,101 @@ lasso.coef
 @
 \end{singlespace}
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Logistic regression for categorical outcome}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Intro
+To further examine the data, we look at a case where we seek to predict the type of dwelling (e.g. one-family construction, duplex, townhouses). 
+From the set of covariates provided, the predictions for the class of dwelling, along with its probability is outputted.
+To do so, we use the multinomial logistic model for nominal outcomes, where we view the probability of a home being classified as a certain category as 
+$$
+\log \frac{\pi_k(x_i)}{\pi_K(x_i)} = x_i^T \beta_k
+$$
+which uses the logit odds model for probability.
+
+% Data clarification
+The dataset contains several columns that directly contain classifications that are directly related to the home type, such as \texttt{MS.SubClass} (nominal type of dwelling) and \texttt{House.Style} (nominal style of dwelling). 
+These columns are omitted, and the regression is done to predict the factor levels for the category \texttt{Bldg.Type}, which is a nominal type of dwelling categorized into \texttt{1Fam} (single-family detached), \texttt{2FmCon} (two family conversions), \texttt{Duplx} (duplexes), and \texttt{Twnhse} (townhouse).
+The original dataset lists two types of townhouses: end unit and inside unit.
+These are condensed into one category.
+
+% Logistic regression
+From there, a generalized linear model is fit with the link function being the logit form. 
+Presented are the predicted probabilities for the building type of the first 100 buildings. 
+
+<<type_logistic, cache=TRUE>>=
+library(nnet)
+library(forcats)
+
+ames$Bldg.Type <- fct_collapse(ames$Bldg.Type, Twnhs = c("Twnhs","TwnhsE"))
+
+type.fit.area <- multinom(Bldg.Type ~  Lot.Area, data = ames)
+
+# subclass defines the dwelling type, so let's leave it out
+type.fit.all <- multinom(Bldg.Type ~  . - MS.SubClass - House.Style, data = ames)
+type.fit.1 <- multinom(Bldg.Type ~  1, data = ames)
+
+# Z test for significance
+zTest <- summary(type.fit.all)$coefficients/summary(type.fit.all)$standard.errors
+pTest <- (1 - pnorm(abs(zTest), 0, 1)) * 2
+
+predict(type.fit.all, newdata=ames, type = "prob")[1:100,]
+@
+
+We can then take the highest probability as the predicted classification of the home.
+Cross-checking this with the actual building type as recorded in the dataset, we arrive at a percentage of correct predictions.
+
+Percentage of correct predictions using all covariates:
+
+<<type_logistic_percentage, cache=TRUE>>=
+predict.type <- predict(type.fit.all, newdata=ames, type = "class")
+type.accuracy <- sum((predict.type == ames$Bldg.Type))/dim(ames)[1]*100
+type.accuracy
+@
+
+% Hypothesis testing
+What if we're interested in reducing the covariates again?
+Firstly, a hypothesis test for whether or not the coefficient for the covariate equals zero can be carried out.
+This is simply a Wald test for the regression coefficient, and we can then output the p-value to quantify the test results.
+From the p-values detailed below, we find that several covariates offer high p-values, meaning that they are likely to not contribute to the prediction (likely having $\beta = 0$).
+Most notably, variables pertaining to the details of features such as a porch, garage, basement, or veneer are not significant to predicting the type of building. 
+
+<<type_logistic_hyp, cache=TRUE>>=
+# Z test for significance
+zTest <- summary(type.fit.all)$coefficients/summary(type.fit.all)$standard.errors
+pTest <- (1 - pnorm(abs(zTest), 0, 1)) * 2
+@
+
+Next, we can try to perform an analysis of variance in order to find the least significant covariates.
+To do so, we test the results of the ANOVA with a $\chi^2$ test and consider those with a low test-value to be non-significant variables.
+Next, a prediction is performed with the covariates, excluding the non-predictors found with ANOVA (along with \texttt{MS.SubClass} and \texttt{House.Style}).
+Again, we'll output the accuracy of the predictions cross-checked with the true building types as recorded.
+
+<<type_logistic_anova, cache=TRUE>>=
+# Z test for significance
+# Likelihood ratio test for significance
+LRTAnova <- Anova(type.fit.all)
+
+# predictors whose coefficients are tested against 0
+typeNonPredictors <- row.names(LRTAnova[LRTAnova$`Pr(>Chisq)`<=0.9,])
+typeNonPredictors
+typeNonPredictors <- c(typeNonPredictors, "MS.SubClass", "House.Style")
+
+# short regression
+ames.short <- ames[, !colnames(ames) %in% typeNonPredictors]
+type.fit.short <- multinom(Bldg.Type ~ ., data=ames.short)
+predict.short <- predict(type.fit.short, newdata=ames.short, type = "class")
+
+short.accuracy <- sum((predict.short == ames.short$Bldg.Type))/dim(ames.short)[1]*100
+short.accuracy
+@
+
+We note that there is a drop in the prediction accuracy by two percentage points.
+It is also of note that due to the high volume of single-family homes, the prediction accuracy might be skewed such that predicting every construction to be single-family results in a fairly high accuracy.
 % TODO Perhaps the summary should be placed in an appendix.
+
 
 
 
