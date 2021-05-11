@@ -21,7 +21,6 @@ system (paste ("biber", sub ("\\.Rnw$", "", current_input())))
 %========================================================================
 
 \begin{document}
-\SweaveOpts{concordance=TRUE}
 
 \begin{titlepage}
 	\begin{center}
@@ -112,11 +111,13 @@ library("nnet")
 library("forcats")
 library("afex")
 library("AER")
+library("boot")
 @
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%
 
 % introduce dataset
 We work on a dataset containing assessed values for residential properties sold in Ames, Iowa, in the late 2000s.
@@ -190,9 +191,12 @@ cat((1 - dim(ames)[1] / dim(ames.full)[1]) * 100, " %")
 @
 \end{singlespace}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Normal Linear Model}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % intro
 This section demonstrates the use of the normal linear model for making inference about the regression coefficients and the predicted values obtained using the model.
@@ -270,6 +274,33 @@ round(tvalues , 2)
 
 We observe that all five EHW corrections result in increased standard errors for the regression coefficients, which is aligning with our expectation.
 
+\subsubsection{Confidence Intervals}
+
+We can get parametric confidence intervals for the intercept and \texttt{Gr.Liv.Area}.
+We expect those to differ from a bootstrap estimate, given what we observed in the previous section regarding the standard errors.
+
+We compute the parametric confidence intervals with the following line:
+
+<<param_confint, cache=TRUE>>=
+confint(fit)
+@
+
+Bootstrap confidence intervals can be obtained as follows:
+
+<<bootstrap_ci, cache=TRUE>>=
+# using library(boot)
+func = function(data,idx){
+coef(lm(SalePrice ~ Gr.Liv.Area, data=data[idx,]))
+}
+B = boot(ames,func,R=10000)
+
+(boot.ci(B,index=1,type="perc"))
+(boot.ci(B,index=2,type="perc"))
+@
+
+As we expected, the confidence intervals obtained from the two methods do not match.
+We accept the latter result, as the bootstrap estimate has weaker assumptions.
+
 \subsection{Multivariate Regression}
 
 This section demonstrates multivariate regression of the sale price conditioned on all other available information, using a Normal Linear Model.
@@ -303,11 +334,13 @@ fit <- lm(SalePrice ~ ., data=ames)
 The summary of this model is very long, as it contains 213 coefficients (plus the intercept), for most of which we cannot reject the null hypothesis that their actual value is zero.
 As with the univariate case, we make regression diagnostic plots.
 
+\begin{singlespace}
 <<multivariate_regression_summary, cache=TRUE>>=
 point.col = rgb(red=0.3, green=0.3, blue=0.3, alpha=0.4)  # point color for the plots
 par(mfrow = c(2,2))
 plot(fit, col = point.col)
 @
+\end{singlespace}
 
 % diagnostic interpretation
 The diagnostic plots show that this time homoskedasticity is reduced.
@@ -329,13 +362,75 @@ In addition, depending on our use case, we might need a model that is easier to 
 For all these reasons, we often need to simplify our models.
 However, the simplifying process needs to be conducted using a consistent method and quantifiable metrics.
 Cross-validation is computationally intensive, and the number of available features makes it infeasible to implement the method naively (we could, of course, hand-pick features and limit the options).
-In the following section, we perform model selection with R's \texttt{step} function, which uses AIC to reveal the optimal number of features.
+In section \ref{sec:modelselection} we perform model selection with R's \texttt{step} function, which uses AIC to reveal the optimal number of features.
+Before that, we demonstrate the use of principal component analysis for outlier detection through dimensionality reduction.
 
 
 
 
+
+\newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Principal Component Analysis}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+In this section we demonstrate the use of principal component analysis (PCA) to identify outliers.
+One common goal when using PCA is to reduce the dimensionality of the available data, while maintaining a notion of "relevant distance" between the observations.
+There might be many reasons to do this, but in this section we will focus on outlier detection.
+
+The following code performs the analysis.
+Comments have been added to explain the goal of each step.
+
+\begin{singlespace}
+<<pca_calculations, cache=TRUE>>=
+# remove Nas and keep all numeric columns
+ames.numeric <- na.omit(subset(ames.full, select=c(
+  SalePrice,
+  Gr.Liv.Area,
+  Year.Built,
+    Lot.Area, Overall.Qual, Overall.Cond, 
+    Garage.Area, Total.Bsmt.SF
+)))
+
+# PCA #
+
+# perform PCA, centering and scaling the data
+ames.pca <- prcomp(ames.numeric, center = TRUE, scale. = TRUE)
+
+# Outlier Detection #
+
+# compute the distance from the origin given the first three PCs
+r2 <- ames.pca$x[,1]^2 + ames.pca$x[,2]^2 + ames.pca$x[,3]^2
+# get the indices of the points sorted in decreasing distance from the origin
+r2 <- order(r2, decreasing=TRUE)
+@
+\end{singlespace}
+
+We can visualize the projections of all the observations on the plane defined by the first two principal components.
+
+\begin{singlespace}
+<<pca_plot, cache=TRUE, fig.width=4, fig.height=4>>=
+plot(ames.pca$x[,1], ames.pca$x[,2], asp=1, col=point.col)
+points(ames.pca$x[r2[1:3],1], ames.pca$x[r2[1:3],2], col='red', pch=5)
+@
+\end{singlespace}
+
+We can also get the indices of the outliers identified in red in the plot above.
+
+\begin{singlespace}
+<<pca_idx, cache=TRUE>>=
+r2[1:3]
+@
+\end{singlespace}
+
+
+
+
+
+\newpage
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Model Selection}
+\label{sec:modelselection}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % intro
@@ -489,15 +584,36 @@ prod(bool) == 1 # assert all components are TRUE
 @
 \end{singlespace}
 
-Finally, we present the summary of the optimum model.
 
-\small
+
+
+
+
+
+
+
+
+
+
+
+
+Finally, the summary of the optimum model can be presented using the \texttt{summary} command.
+The output can be found in appendix \ref{sec:model_sel_out}.
+
+
+% chunk that is displayed but not evaluated
 \begin{singlespace}
-<<stepwise_final_summary, cache=TRUE>>=
+<<eval=FALSE>>=
 summary(fit.sub)
 @
 \end{singlespace}
 
+
+
+
+
+
+\newpage
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{LASSO Regression}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -571,8 +687,11 @@ lasso.coef
 \end{singlespace}
 
 
+
+\newpage
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Logistic regression for categorical outcome}
+\label{sec:logistic_regression}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Intro
@@ -592,7 +711,6 @@ These are condensed into one category.
 
 % Logistic regression
 From there, a generalized linear model is fit with the link function being the logit form. 
-Presented are the predicted probabilities for the building type of the first 100 buildings. 
 
 <<type_logistic, cache=TRUE>>=
 library(nnet)
@@ -609,9 +727,17 @@ type.fit.1 <- multinom(Bldg.Type ~  1, data = ames)
 # Z test for significance
 zTest <- summary(type.fit.all)$coefficients/summary(type.fit.all)$standard.errors
 pTest <- (1 - pnorm(abs(zTest), 0, 1)) * 2
+@
 
+The predicted probabilities for the building type of the first 100 buildings is presented in appendix \ref{sec:logistic_reg_out}.
+They can be obtained by issuing the following:
+
+% chunk that is displayed but not evaluated
+\begin{singlespace}
+<<eval=FALSE>>=
 predict(type.fit.all, newdata=ames, type = "prob")[1:100,]
 @
+\end{singlespace}
 
 We can then take the highest probability as the predicted classification of the home.
 Cross-checking this with the actual building type as recorded in the dataset, we arrive at a percentage of correct predictions.
@@ -663,15 +789,35 @@ short.accuracy
 
 We note that there is a drop in the prediction accuracy by two percentage points.
 It is also of note that due to the high volume of single-family homes, the prediction accuracy might be skewed such that predicting every construction to be single-family results in a fairly high accuracy.
-% TODO Perhaps the summary should be placed in an appendix.
+
+
+
+\newpage
+
+\appendix
+
+\section{Model Selection Output}
+\label{sec:model_sel_out}
+
+This is the output of the call \texttt{summary(fit.sub)} issued in section \ref{sec:modelselection}.
+
+% chunk that is evaluated but not shown
+<<stepwise_final_summary, echo=FALSE, cache=TRUE>>=
+summary(fit.sub)
+@
 
 
 
 
+\section{Logistic Regression Output}
+\label{sec:logistic_reg_out}
 
+This is the output of the call \texttt{predict(type.fit.all, newdata=ames, type = "prob")[1:100,]} issued in section \ref{sec:logistic_regression}.
 
-
-
+% chunk that is evaluated but not shown
+<<logistic_predictions, echo=FALSE, cache=TRUE>>=
+predict(type.fit.all, newdata=ames, type = "prob")[1:100,]
+@
 
 
 \end{document}
