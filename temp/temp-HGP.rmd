@@ -118,6 +118,11 @@ summary(fit)
 ```
 
 ```{r}
+confint(fit)
+```
+
+
+```{r}
 library ("car")
 fit.hc0 = sqrt(diag(hccm(fit, type="hc0")))
 fit.hc1 = sqrt(diag(hccm(fit, type="hc1")))
@@ -131,6 +136,35 @@ fit.hc2 , fit.hc3 , fit.hc4)
 colnames(tvalues) = c("ols",  "hc0", "hc1", "hc2", "hc3", "hc4")
 round(tvalues , 2)
 ```
+
+
+```{r}
+library(boot)
+func = function(data,idx){
+coef(lm(SalePrice ~ Gr.Liv.Area, data=data[idx,]))
+}
+B = boot(ames,func,R=1000)
+```
+
+
+```{r}
+boot.ci(B,index=1,type="perc")
+```
+
+
+```{r}
+boot.ci(B,index=2,type="perc")
+```
+
+
+
+
+
+
+
+
+
+
 
 
 

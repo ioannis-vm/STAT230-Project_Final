@@ -111,11 +111,13 @@ library("nnet")
 library("forcats")
 library("afex")
 library("AER")
+library("boot")
 @
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%
 
 % introduce dataset
 We work on a dataset containing assessed values for residential properties sold in Ames, Iowa, in the late 2000s.
@@ -189,9 +191,12 @@ cat((1 - dim(ames)[1] / dim(ames.full)[1]) * 100, " %")
 @
 \end{singlespace}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Normal Linear Model}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % intro
 This section demonstrates the use of the normal linear model for making inference about the regression coefficients and the predicted values obtained using the model.
@@ -269,6 +274,33 @@ round(tvalues , 2)
 
 We observe that all five EHW corrections result in increased standard errors for the regression coefficients, which is aligning with our expectation.
 
+\subsubsection{Confidence Intervals}
+
+We can get parametric confidence intervals for the intercept and \texttt{Gr.Liv.Area}.
+We expect those to differ from a bootstrap estimate, given what we observed in the previous section regarding the standard errors.
+
+We compute the parametric confidence intervals with the following line:
+
+<<param_confint, cache=TRUE>>=
+confint(fit)
+@
+
+Bootstrap confidence intervals can be obtained as follows:
+
+<<bootstrap_ci, cache=TRUE>>=
+# using library(boot)
+func = function(data,idx){
+coef(lm(SalePrice ~ Gr.Liv.Area, data=data[idx,]))
+}
+B = boot(ames,func,R=10000)
+
+(boot.ci(B,index=1,type="perc"))
+(boot.ci(B,index=2,type="perc"))
+@
+
+As we expected, the confidence intervals obtained from the two methods do not match.
+We accept the latter result, as the bootstrap estimate has weaker assumptions.
+
 \subsection{Multivariate Regression}
 
 This section demonstrates multivariate regression of the sale price conditioned on all other available information, using a Normal Linear Model.
@@ -302,11 +334,13 @@ fit <- lm(SalePrice ~ ., data=ames)
 The summary of this model is very long, as it contains 213 coefficients (plus the intercept), for most of which we cannot reject the null hypothesis that their actual value is zero.
 As with the univariate case, we make regression diagnostic plots.
 
+\begin{singlespace}
 <<multivariate_regression_summary, cache=TRUE>>=
 point.col = rgb(red=0.3, green=0.3, blue=0.3, alpha=0.4)  # point color for the plots
 par(mfrow = c(2,2))
 plot(fit, col = point.col)
 @
+\end{singlespace}
 
 % diagnostic interpretation
 The diagnostic plots show that this time homoskedasticity is reduced.
@@ -328,11 +362,72 @@ In addition, depending on our use case, we might need a model that is easier to 
 For all these reasons, we often need to simplify our models.
 However, the simplifying process needs to be conducted using a consistent method and quantifiable metrics.
 Cross-validation is computationally intensive, and the number of available features makes it infeasible to implement the method naively (we could, of course, hand-pick features and limit the options).
-In the following section, we perform model selection with R's \texttt{step} function, which uses AIC to reveal the optimal number of features.
+In section \ref{sec:modelselection} we perform model selection with R's \texttt{step} function, which uses AIC to reveal the optimal number of features.
+Before that, we demonstrate the use of principal component analysis for outlier detection through dimensionality reduction.
 
 
 
 
+
+\newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Principal Component Analysis}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+In this section we demonstrate the use of principal component analysis (PCA) to identify outliers.
+One common goal when using PCA is to reduce the dimensionality of the available data, while maintaining a notion of "relevant distance" between the observations.
+There might be many reasons to do this, but in this section we will focus on outlier detection.
+
+The following code performs the analysis.
+Comments have been added to explain the goal of each step.
+
+\begin{singlespace}
+<<pca_calculations, cache=TRUE>>=
+# remove Nas and keep all numeric columns
+ames.numeric <- na.omit(subset(ames.full, select=c(
+  SalePrice,
+  Gr.Liv.Area,
+  Year.Built,
+    Lot.Area, Overall.Qual, Overall.Cond, 
+    Garage.Area, Total.Bsmt.SF
+)))
+
+# PCA #
+
+# perform PCA, centering and scaling the data
+ames.pca <- prcomp(ames.numeric, center = TRUE, scale. = TRUE)
+
+# Outlier Detection #
+
+# compute the distance from the origin given the first three PCs
+r2 <- ames.pca$x[,1]^2 + ames.pca$x[,2]^2 + ames.pca$x[,3]^2
+# get the indices of the points sorted in decreasing distance from the origin
+r2 <- order(r2, decreasing=TRUE)
+@
+\end{singlespace}
+
+We can visualize the projections of all the observations on the plane defined by the first two principal components.
+
+\begin{singlespace}
+<<pca_plot, cache=TRUE, fig.width=4, fig.height=4>>=
+plot(ames.pca$x[,1], ames.pca$x[,2], asp=1, col=point.col)
+points(ames.pca$x[r2[1:3],1], ames.pca$x[r2[1:3],2], col='red', pch=5)
+@
+\end{singlespace}
+
+We can also get the indices of the outliers identified in red in the plot above.
+
+\begin{singlespace}
+<<pca_idx, cache=TRUE>>=
+r2[1:3]
+@
+\end{singlespace}
+
+
+
+
+
+\newpage
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Model Selection}
 \label{sec:modelselection}
@@ -518,7 +613,7 @@ summary(fit.sub)
 
 
 
-
+\newpage
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{LASSO Regression}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -592,6 +687,8 @@ lasso.coef
 \end{singlespace}
 
 
+
+\newpage
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Logistic regression for categorical outcome}
 \label{sec:logistic_regression}
@@ -695,6 +792,7 @@ It is also of note that due to the high volume of single-family homes, the predi
 
 
 
+\newpage
 
 \appendix
 
