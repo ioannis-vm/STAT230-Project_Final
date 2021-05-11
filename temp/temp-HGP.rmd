@@ -425,18 +425,15 @@ type.fit.all <- multinom(Bldg.Type ~  . - MS.SubClass - House.Style, data = ames
 type.fit.1 <- multinom(Bldg.Type ~  1, data = ames)
 
 # oldAnoveMultinom <- anova(type.fit.area, type.fit.all)
-# summary(type.fit.all)
+summary(type.fit.all)
 
-# # Z test for significance
-# zTest <- summary(type.fit.all)$coefficients/summary(type.fit.all)$standard.errors
-# pTest <- (1 - pnorm(abs(zTest), 0, 1)) * 2
+# Z test for significance
+zTest <- summary(type.fit.all)$coefficients/summary(type.fit.all)$standard.errors
+pTest <- (1 - pnorm(abs(zTest), 0, 1)) * 2
 
 predict.type <- predict(type.fit.all, newdata=ames, type = "class")
 type.accuracy <- sum((predict.type == ames$Bldg.Type))/dim(ames)[1]*100
 type.accuracy
-
-# check if it matches is true
-# take percentage of wrongs
 
 ```
 
@@ -459,4 +456,17 @@ predict.short <- predict(type.fit.short, newdata=ames.short, type = "class")
 
 short.accuracy <- sum((predict.short == ames.short$Bldg.Type))/dim(ames.short)[1]*100
 short.accuracy
+```
+
+```{r}
+# predictors whose coefficients are tested against 0
+veryShortPredictors <- LRTAnova[order(LRTAnova$`Pr(>Chisq)`),][1:65,] %>% rownames()
+veryShortPredictors <- c(veryShortPredictors, "MS.SubClass", "House.Style")
+# short regression
+ames.very.short <- ames[, !colnames(ames) %in% veryShortPredictors]
+type.fit.very.short <- multinom(Bldg.Type ~ ., data=ames.very.short)
+predict.very.short <- predict(type.fit.very.short, newdata=ames.very.short, type = "class")
+
+short.very.accuracy <- sum((predict.very.short == ames.very.short$Bldg.Type))/dim(ames.very.short)[1]*100
+short.very.accuracy
 ```
