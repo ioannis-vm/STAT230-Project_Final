@@ -21,7 +21,6 @@ system (paste ("biber", sub ("\\.Rnw$", "", current_input())))
 %========================================================================
 
 \begin{document}
-\SweaveOpts{concordance=TRUE}
 
 \begin{titlepage}
 	\begin{center}
@@ -336,6 +335,7 @@ In the following section, we perform model selection with R's \texttt{step} func
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Model Selection}
+\label{sec:modelselection}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % intro
@@ -489,14 +489,35 @@ prod(bool) == 1 # assert all components are TRUE
 @
 \end{singlespace}
 
-Finally, we present the summary of the optimum model.
 
-\small
+
+
+
+
+
+
+
+
+
+
+
+
+Finally, the summary of the optimum model can be presented using the \texttt{summary} command.
+The output can be found in appendix \ref{sec:model_sel_out}.
+
+
+% chunk that is displayed but not evaluated
 \begin{singlespace}
-<<stepwise_final_summary, cache=TRUE>>=
+<<eval=FALSE>>=
 summary(fit.sub)
 @
 \end{singlespace}
+
+
+
+
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{LASSO Regression}
@@ -573,6 +594,7 @@ lasso.coef
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Logistic regression for categorical outcome}
+\label{sec:logistic_regression}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Intro
@@ -592,7 +614,6 @@ These are condensed into one category.
 
 % Logistic regression
 From there, a generalized linear model is fit with the link function being the logit form. 
-Presented are the predicted probabilities for the building type of the first 100 buildings. 
 
 <<type_logistic, cache=TRUE>>=
 library(nnet)
@@ -609,9 +630,17 @@ type.fit.1 <- multinom(Bldg.Type ~  1, data = ames)
 # Z test for significance
 zTest <- summary(type.fit.all)$coefficients/summary(type.fit.all)$standard.errors
 pTest <- (1 - pnorm(abs(zTest), 0, 1)) * 2
+@
 
+The predicted probabilities for the building type of the first 100 buildings is presented in appendix \ref{sec:logistic_reg_out}.
+They can be obtained by issuing the following:
+
+% chunk that is displayed but not evaluated
+\begin{singlespace}
+<<eval=FALSE>>=
 predict(type.fit.all, newdata=ames, type = "prob")[1:100,]
 @
+\end{singlespace}
 
 We can then take the highest probability as the predicted classification of the home.
 Cross-checking this with the actual building type as recorded in the dataset, we arrive at a percentage of correct predictions.
@@ -663,15 +692,34 @@ short.accuracy
 
 We note that there is a drop in the prediction accuracy by two percentage points.
 It is also of note that due to the high volume of single-family homes, the prediction accuracy might be skewed such that predicting every construction to be single-family results in a fairly high accuracy.
-% TODO Perhaps the summary should be placed in an appendix.
 
 
 
 
+\appendix
+
+\section{Model Selection Output}
+\label{sec:model_sel_out}
+
+This is the output of the call \texttt{summary(fit.sub)} issued in section \ref{sec:modelselection}.
+
+% chunk that is evaluated but not shown
+<<stepwise_final_summary, echo=FALSE, cache=TRUE>>=
+summary(fit.sub)
+@
 
 
 
 
+\section{Logistic Regression Output}
+\label{sec:logistic_reg_out}
+
+This is the output of the call \texttt{predict(type.fit.all, newdata=ames, type = "prob")[1:100,]} issued in section \ref{sec:logistic_regression}.
+
+% chunk that is evaluated but not shown
+<<logistic_predictions, echo=FALSE, cache=TRUE>>=
+predict(type.fit.all, newdata=ames, type = "prob")[1:100,]
+@
 
 
 \end{document}
