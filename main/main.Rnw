@@ -293,13 +293,14 @@ func = function(data,idx){
 coef(lm(SalePrice ~ Gr.Liv.Area, data=data[idx,]))
 }
 B = boot(ames,func,R=10000)
-
+cat("Intercept")
 (boot.ci(B,index=1,type="perc"))
+cat("Gr.Liv.Area")
 (boot.ci(B,index=2,type="perc"))
 @
 
-As we expected, the confidence intervals obtained from the two methods do not match.
-We accept the latter result, as the bootstrap estimate has weaker assumptions.
+As we expected, the bootstrap confidence intervals are wider.
+We accept this result instead of the parametric confidence intervals, as the bootstrap estimate has weaker assumptions.
 
 \subsection{Multivariate Regression}
 
