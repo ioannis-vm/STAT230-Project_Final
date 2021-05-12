@@ -125,7 +125,7 @@ We work on a dataset containing assessed values for residential properties sold 
 Although the Boston housing dataset is commonly used, it no longer realistically represents today's housing market and contains fewer covariates.
 Using the Ames dataset, inference on property values will better reflect today's reality, and there is more flexibility to demonstrate model selection techniques.
 % where does it come from
-The data set was compiled by Prof. Dean DeCock and contains general information about a home's construction and features, such as size, condition, and year built, as well as the response variable: its sale price \parencite{DDC}.
+The data set was compiled by Prof. Dean DeCock and contains general information about a home's construction and features, such as size, condition, and year built, as well as the response variable: its sale price \parencite{DDC}, and later on, its building type.
 % description
 In general, information such as square footage of the house and its features provide continuous variables to perform linear analysis with;
 in addition, the dataset contains various categorical features, such as roofing material or the presence/absence of amenities like garages or pools.
@@ -637,9 +637,10 @@ A 10-fold cross validation is performed by default for a range of $\lambda$ valu
 From there, we choose the $\lambda$ value that results in the smallest cross validation mean squared error.
 
 % plots
-Below, we plot the coefficients still remaining as the L1-norm threshold for the coefficients become more restrictive. 
+
+Below, we plot the coefficients as $\lambda$ penalty term decreases.
 We can see that as variables enter if we relax the $\lambda$ threshold, the most important ones enter first: \texttt{Street} (type of access), \texttt{Condtn.2} (proximity to certain road features), \texttt{Overall.Qual}, \texttt{Exterior.Cond}, and \texttt{Kitchen.Abvgr} (number of kitchens above grade.)
-We also plot the progression of the mean squared error as the $\lambda$ value changes.
+
 \begin{singlespace}
 <<LASSO_cv, cache=TRUE>>=
 library(glmnet)
@@ -661,16 +662,25 @@ lasso.mod <- glmnet(x.train,
                    lambda = lambdas) # Fit lasso model on training data
 
 plot_glmnet(lasso.mod, label=5)    # Draw plot of coefficients
-plot(lasso.mod, label=5)    # Draw plot of coefficients
+@
+\end{singlespace}
+
+We also plot the progression of the mean squared error as the $\lambda$ value changes.
+Note that eventually, there is a tradeoff between the $\lambda$ penalty and how much MSE is decreased.
+
+\begin{singlespace}
+<<LASSO_morePlots, cache=TRUE>>=
 
 cv.out <- cv.glmnet(x.train, y.train, alpha = 1) # Fit lasso model on training data
 plot(cv.out) # Draw plot of training MSE as a function of lambda
 bestlam <- cv.out$lambda.min # Select lambda that minimizes training MSE
 @
+\end{singlespace}
 
 We can now use the optimal $\lambda$ value in the LASSO prediction and output the mean-squared error from prediction.
 Note that several coefficients are filtered out to be zero: \texttt{House.Style}, \texttt{Condtn.1} (redundant), \texttt{BsmtFin.Type.2} (Rating of basement finished area), \texttt{Half.Bath}, \texttt{Garage.Yr.Blt}, \texttt{Pool.Area}, and \texttt{Misc.Val} (value of miscellaneous features).
 
+\begin{singlespace}
 <<LASSO_regr, cache=TRUE>>=
 
 lasso.pred <- predict(lasso.mod, s = bestlam, newx = x.test) # Use best lambda to predict test data
@@ -744,11 +754,13 @@ Cross-checking this with the actual building type as recorded in the dataset, we
 
 Percentage of correct predictions using all covariates:
 
+\begin{singlespace}
 <<type_logistic_percentage, cache=TRUE>>=
 predict.type <- predict(type.fit.all, newdata=ames, type = "class")
 type.accuracy <- sum((predict.type == ames$Bldg.Type))/dim(ames)[1]*100
 type.accuracy
 @
+\end{singlespace}
 
 % Hypothesis testing
 What if we're interested in reducing the covariates again?
@@ -757,17 +769,20 @@ This is simply a Wald test for the regression coefficient, and we can then outpu
 From the p-values detailed below, we find that several covariates offer high p-values, meaning that they are likely to not contribute to the prediction (likely having $\beta = 0$).
 Most notably, variables pertaining to the details of features such as a porch, garage, basement, or veneer are not significant to predicting the type of building. 
 
+\begin{singlespace}
 <<type_logistic_hyp, cache=TRUE>>=
 # Z test for significance
 zTest <- summary(type.fit.all)$coefficients/summary(type.fit.all)$standard.errors
 pTest <- (1 - pnorm(abs(zTest), 0, 1)) * 2
 @
+\end{singlespace}
 
 Next, we can try to perform an analysis of variance in order to find the least significant covariates.
 To do so, we test the results of the ANOVA with a $\chi^2$ test and consider those with a low test-value to be non-significant variables.
 Next, a prediction is performed with the covariates, excluding the non-predictors found with ANOVA (along with \texttt{MS.SubClass} and \texttt{House.Style}).
 Again, we'll output the accuracy of the predictions cross-checked with the true building types as recorded.
 
+\begin{singlespace}
 <<type_logistic_anova, cache=TRUE>>=
 # Z test for significance
 # Likelihood ratio test for significance
@@ -786,10 +801,12 @@ predict.short <- predict(type.fit.short, newdata=ames.short, type = "class")
 short.accuracy <- sum((predict.short == ames.short$Bldg.Type))/dim(ames.short)[1]*100
 short.accuracy
 @
+\end{singlespace}
 
 We note that there is a drop in the prediction accuracy by two percentage points.
 It is also of note that due to the high volume of single-family homes, the prediction accuracy might be skewed such that predicting every construction to be single-family results in a fairly high accuracy.
 
+\section{Summary}
 
 
 \newpage

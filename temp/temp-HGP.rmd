@@ -458,7 +458,7 @@ type.fit.area <- multinom(Bldg.Type ~  Lot.Area, data = ames)
 type.fit.all <- multinom(Bldg.Type ~  . - MS.SubClass - House.Style, data = ames)
 type.fit.1 <- multinom(Bldg.Type ~  1, data = ames)
 
-# oldAnoveMultinom <- anova(type.fit.area, type.fit.all)
+# oldAnovaMultinom <- anova(type.fit.area, type.fit.all)
 summary(type.fit.all)
 
 # Z test for significance
@@ -492,6 +492,8 @@ short.accuracy <- sum((predict.short == ames.short$Bldg.Type))/dim(ames.short)[1
 short.accuracy
 ```
 
+Keep only about 10 predictors? 
+
 ```{r}
 # predictors whose coefficients are tested against 0
 veryShortPredictors <- LRTAnova[order(LRTAnova$`Pr(>Chisq)`),][1:65,] %>% rownames()
@@ -503,4 +505,27 @@ predict.very.short <- predict(type.fit.very.short, newdata=ames.very.short, type
 
 short.very.accuracy <- sum((predict.very.short == ames.very.short$Bldg.Type))/dim(ames.very.short)[1]*100
 short.very.accuracy
+```
+
+Exclude 1Fam to see how well it works? 
+
+```{r}
+ames.filter <- filter(ames, Bldg.Type != "1Fam")
+ames.filter$Bldg.Type <- droplevels(ames.filter$Bldg.Type)
+
+# subclass defines the dwelling type, so let's leave it out
+ames.filter.fit.all <- multinom(Bldg.Type ~  . - MS.SubClass - House.Style, data = ames.filter)
+
+# oldAnovaMultinom <- anova(type.fit.area, type.fit.all)
+
+# Z test for significance
+zTest.filter <- summary(ames.filter.fit.all)$coefficients/summary(ames.filter.fit.all)$standard.errors
+pTest.filter <- (1 - pnorm(abs(zTest), 0, 1)) * 2
+
+predict.type.filter <- predict(ames.filter.fit.all, newdata=ames.filter, type = "class")
+filter.type.accuracy <- sum((predict.type.filter == ames.filter$Bldg.Type))/dim(ames.filter)[1]*100
+filter.type.accuracy
+
+filterAnova <- Anova(ames.filter.fit.all)
+
 ```
