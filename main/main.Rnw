@@ -808,6 +808,33 @@ It is also of note that due to the high volume of single-family homes, the predi
 
 \section{Summary}
 
+The Ames housing data set is analyzed using methods built upon linear models in order to predict response variables, such as housing prices and building type.
+Additional nature of the data, such as heteroskedasticity, are studied along the way.
+% Normal linear model, uni and multivariate
+Two linear regressions are performed using the Gauss-Markov, one fitting the living area against the sale price, and the other using the entire covariate set.
+It is found in both cases that heteroskedasticity is present, and the residuals do not behave normally in distribution.
+This is visible in an increase of standard error when observing the Eicker-Huber-White standard errors.
+% EHW, CI
+Moreover, this is confirmed by the difference between the parametric linear model result and a bootstrap experiment.
+In addition, outliers are identified using Cook's distance, and it is confirmed against DeCock's initial report that there are between 3 and 5 outliers present.
+% PCA
+This is also identified using principal component analysis, further confirming the outliers.
+
+% Model selection
+In the second half of the report, the study focuses on model selection in order to refine the covariates chosen.
+Using the Akaike Information Criterion as a metric, forward and backward stepwise regression is performed to reduce the covariates.
+It is found that in both directions (adding covariates vs. removing covariates), the optimum model converges at 52 explanatory variables, a reduction from the original 70.
+% Lasso
+Regularized regression, namely LASSO, is also performed to handle model selection.
+After using cross-validation to find the optimal penalty parameter, the model selects 63 explanatory variables, more than the AIC model selection.
+% Logistic regression
+
+Lastly, a categorical logistic regression is performed in order to determine the type of dwelling from the covariate sets.
+Using all the covariates, the model performs well in predicting the dwelling type, reaching +99\% accuracy in predicting the original data.
+However, performing a likelihood ratio test on an ANOVA, we are able to reduce the covariates again to 44 covariates while still maintaining a +97\% accuracy.
+
+% Wrap up
+In general, while the data is not entirely suitable for analysis using linear models, as evidenced by improvements using the bootstrap, linear model methods predict sale price and building type sufficiently well.
 
 \newpage
 
