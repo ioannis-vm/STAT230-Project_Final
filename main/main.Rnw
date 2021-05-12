@@ -123,7 +123,7 @@ library("boot")
 We work on a dataset containing assessed values for residential properties sold in Ames, Iowa, in the late 2000s.
 % why not use Boston Housing
 Although the Boston housing dataset is commonly used, it no longer realistically represents today's housing market and contains fewer covariates.
-Using the Ames dataset, inference on property values will better reflect today's reality, and there is more flexibility to demonstrate model selection techniques.
+Using the Ames dataset, inference on property values better reflects today's reality, and there is more flexibility to demonstrate model selection techniques.
 % where does it come from
 The data set was compiled by Prof. Dean DeCock and contains general information about a home's construction and features, such as size, condition, and year built, as well as the response variable: its sale price \parencite{DDC}, and later on, its building type.
 % description
@@ -132,7 +132,7 @@ in addition, the dataset contains various categorical features, such as roofing 
 % the repository
 All files associated with this analysis are publicly available on GitHub in the following URL:
 \url{https://github.com/ioannis-vm/STAT230-Project\_Final}
-The repository contains the code that generates this report, auxiliary files we used to develop it, and the dataset accompanied with a text file that describes its fields.
+The repository contains the code that generates this report, auxiliary files used to develop it, and the dataset accompanied with a text file that describes its fields.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -141,7 +141,7 @@ The repository contains the code that generates this report, auxiliary files we 
 
 The following code imports the dataset and performs some cleanup operations.
 % explain cleanup operations
-Many variables had to be manually converted to factors.
+Many variables are manually converted to factors.
 The variables \texttt{Overall.Qual} and \texttt{Overall.Cond} are ratings on a scale from 1 to 10 of the overall quality and condition of the considered house, respectively.
 We treat those variables as continuous since it is reasonable to assume that they are linearly related to the sale price.
 We remove columns that contain NA values for more than 10\% of the observations.
@@ -226,7 +226,7 @@ The red line indicates the average magnitude of the residuals as a function of t
 A horizontal line implies homoskedasticity.
 % residuals vs. leverage
 Finally, the Residuals vs. Leverage helps identify outlier points.
-Cook's distance can be used to classify points whose contribution to the coefficient estimates is very high.
+Cook's distance is used to classify points whose contribution to the coefficient estimates is very high.
 On the plot, such points lie outside the boundary defined by the dashed red line.
 
 \begin{singlespace}
@@ -354,7 +354,7 @@ With 223 coefficients (70 variables, some of which are factors), this model has 
 However, this in no way guarantees that it better explains reality.
 % example
 For instance, it might be the case that some of the variability in the data is caused by external factors, for which we do not have any information in the dataset (which is not unreasonable to assume).
-If that is the case, the augmented flexibility of our model will allow for the influence of those external factors to manifest itself as aliasing on the coefficients we are trying to predict.
+If that is the case, the augmented flexibility of our model allows for the influence of those external factors to manifest itself as aliasing on the coefficients we are trying to predict.
 This can make features appear significantly relevant when in reality, they are not.
 % second example
 In addition, depending on our use case, we might need a model that is easier to interpret.
@@ -362,8 +362,8 @@ In addition, depending on our use case, we might need a model that is easier to 
 For all these reasons, we often need to simplify our models.
 However, the simplifying process needs to be conducted using a consistent method and quantifiable metrics.
 Cross-validation is computationally intensive, and the number of available features makes it infeasible to implement the method naively (we could, of course, hand-pick features and limit the options).
-In section \ref{sec:modelselection} we perform model selection with R's \texttt{step} function, which uses AIC to reveal the optimal number of features.
-Before that, we demonstrate the use of principal component analysis for outlier detection through dimensionality reduction.
+In Section \ref{sec:modelselection} we perform model selection with R's \texttt{step} function, which uses the Akaike Information Criterion (AIC) to reveal the optimal number of features.
+Before that, we demonstrate the use of principal component analysis (PCA) for outlier detection through dimensionality reduction.
 
 
 
@@ -376,10 +376,10 @@ Before that, we demonstrate the use of principal component analysis for outlier 
 
 In this section we demonstrate the use of principal component analysis (PCA) to identify outliers.
 One common goal when using PCA is to reduce the dimensionality of the available data, while maintaining a notion of "relevant distance" between the observations.
-There might be many reasons to do this, but in this section we will focus on outlier detection.
+There might be many reasons to do this, but in this section we focus on outlier detection.
 
 The following code performs the analysis.
-Comments have been added to explain the goal of each step.
+Comments are added to explain the goal of each step.
 
 \begin{singlespace}
 <<pca_calculations, cache=TRUE>>=
@@ -631,7 +631,7 @@ $$
 $$
 where $\lambda$ is a tuning parameter.
 % crossvalidation
-In order to find the best tuning parameter to use, we will split our data into two halves, used for testing and training.
+In order to find the best tuning parameter to use, we split our data into two halves, used for testing and training.
 Below, we use the package \texttt{glmnet} to perform cross validation.
 A 10-fold cross validation is performed by default for a range of $\lambda$ values.
 From there, we choose the $\lambda$ value that results in the smallest cross validation mean squared error.
